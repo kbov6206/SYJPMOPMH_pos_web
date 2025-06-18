@@ -7,7 +7,7 @@ async function insertSalesData(data, email) {
   const datasetId = 'my_database';
   const salesTableId = 'SYJPMOPMHSalesData';
   const billNumbersTableId = 'SYJPMOPMHBillNumbers';
-  const timestamp = new Date().toISOString();
+  const timestamp = BigQuery.timestamp(new Date());
   const saleDataId = uuidv4();
 
   const salesRows = [];
@@ -72,7 +72,7 @@ async function insertDueBalanceData(data, email) {
   const datasetId = 'my_database';
   const balanceDueTableId = 'SYJPMOPMHBalanceDue';
   const billNumbersTableId = 'SYJPMOPMHBillNumbers';
-  const timestamp = new Date().toISOString();
+  const timestamp = BigQuery.timestamp(new Date());
   const balanceDueId = uuidv4();
 
   const dueBalanceRows = [];
@@ -86,7 +86,7 @@ async function insertDueBalanceData(data, email) {
         Shop_Name: data.shopName,
         Department: data.department,
         Mobile_Number: data.mobileNumber || null,
-        Due_Balance_Received: parseFloat(row.dueBalanceReceived) || null,
+        Due_Balance_Received: row.dueBalanceReceived || null, // Keep as STRING
         Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
         Timestamp: timestamp,
         Email_ID: email
@@ -108,7 +108,7 @@ async function insertDueBalanceData(data, email) {
 async function updateSalesData(data, email) {
   const datasetId = 'my_database';
   const salesTableId = 'SYJPMOPMHSalesData';
-  const timestamp = new Date().toISOString();
+  const timestamp = BigQuery.timestamp(new Date());
   const saleDataId = uuidv4();
 
   await bigquery.query({
@@ -171,7 +171,7 @@ async function updateSalesData(data, email) {
 async function updateDueBalanceData(data, email) {
   const datasetId = 'my_database';
   const balanceDueTableId = 'SYJPMOPMHBalanceDue';
-  const timestamp = new Date().toISOString();
+  const timestamp = BigQuery.timestamp(new Date());
   const balanceDueId = uuidv4();
 
   await bigquery.query({
@@ -191,7 +191,7 @@ async function updateDueBalanceData(data, email) {
         Shop_Name: data.shopName,
         Department: data.department,
         Mobile_Number: data.mobileNumber || null,
-        Due_Balance_Received: parseFloat(row.dueBalanceReceived) || null,
+        Due_Balance_Received: row.dueBalanceReceived || null, // Keep as STRING
         Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
         Timestamp: timestamp,
         Email_ID: email
@@ -252,7 +252,7 @@ async function getRecentDueBalances() {
     ORDER BY Date DESC
     LIMIT 10
   `;
-  const [rows] = await bigquery.query(query);
+  const [rows] = await bigquery.query(options);
   return rows;
 }
 

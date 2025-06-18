@@ -1,11 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
 const { insertSalesData, checkDuplicateBillNumber, getNames, getRecentSales, getSalesData, updateSalesData, insertDueBalanceData, getRecentDueBalances, getDueBalanceData, updateDueBalanceData } = require('./bigquery');
 const app = express();
 
-app.use(cors({ origin: ['https://kbov6206.github.io/SYJPMOPMH_pos_web', 'http://localhost:3000'] }));
+app.use(cors({ origin: ['https://kbov6206.github.io/SYJPMOPMH_pos_web', 'https://sy-jpm-pos-web-uc.a.run.app'] }));
 app.use(express.json());
+app.use(express.static('../docs')); // Serve frontend
 
 app.get('/api/names', async (req, res) => {
   try {
