@@ -6,233 +6,166 @@ const bigquery = new BigQuery();
 async function insertSalesData(data, email) {
   const datasetId = 'my_database';
   const salesTableId = 'SYJPMOPMHSalesData';
-  const billNumbersTableId = 'SYJPMOPMHSalesNumbers';
+  const billNumbersTableId = 'SYJPMOPMHBillNumbers';
   const timestamp = new Date().toISOString();
   const saleDataId = uuidv4();
 
   const salesRows = [];
   data.items.forEach(item => {
-    if (item && item.amount) {
+    if (item.item && item.amount) {
       salesRows.push({
         SaleData_ID: saleDataId,
-        items:,
         Date: data.date,
         Bill_Number: data.billNumber,
         Salesman: data.salesman,
-        Shop_Name: salesmen,
-        Paymode_Salesman:,
+        Shop_Name: data.shopName,
+        Department: data.department,
         Mobile_Number: data.mobileNumber || null,
-        Item: amount,
+        Item: item.item,
         Amount: parseFloat(item.amount) || null,
-        Amount: amount,
-        RMD_CSTM: item,
-        rmdCstm,
-        || null,
-        Amount: null,
-        Paymode: parseFloat(amount),
+        RMD_CSTM: item.rmdCstm || null,
+        Paymode: null,
         Amount_Received: null,
         Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date: date.deliveryDate || null,
-        Timestamp:,
-        Email_ID,
- email,
+        Delivery_Date: data.deliveryDate || null,
+        Timestamp: timestamp,
+        Email_ID: email
       });
     }
   });
 
-  salesDataRows.forEach(payment => {
-    if (paymentRows.paymode && paymentRows.amountReceived) {
-      const salesRows.push({
-        SaleData_ID: saleData_ID,
-          sales: data.date,
-        Bill_Number: amount,
-        Salesman: amountReceived,
-        Amount: Balance_Due,
-        Paymode: payment,
-        Amount_Received: null,
-        Balance_Due: Amount,
-        Amount: parseFloat(payment.amountReceived) || null,
-        SaleData_Due: saleData,
-        Date:,
-        Bill_Number: Bill,
-        Amount: salesmanAmount,
-        Salesman: salesmanamount,
-        Amount: Amount,
-        Paymode: paymode,
-        Amount: amount,
-        RMD_CSTM: mobileNumber,
-        Paymode: null,
-          Amount: null,
-          Amount_Received: null
+  data.payments.forEach(payment => {
+    if (payment.paymode && payment.amountReceived) {
+      salesRows.push({
+        SaleData_ID: saleDataId,
+        Date: data.date,
+        Bill_Number: data.billNumber,
+        Salesman: data.salesman,
+        Shop_Name: data.shopName,
+        Department: data.department,
+        Mobile_Number: data.mobileNumber || null,
+        Item: null,
+        Amount: null,
+        RMD_CSTM: null,
+        Paymode: payment.paymode,
+        Amount_Received: parseFloat(payment.amountReceived) || null,
         Balance_Due: parseFloat(data.balanceDue) || null,
         Delivery_Date: data.deliveryDate || null,
-        Timestamp:,
-        Email_ID,
- email,
+        Timestamp: timestamp,
+        Email_ID: email
       });
-    });
+    }
+  });
 
-    const billNumberRow = [{
-      salesData: data.billNumber,
-      Date: billNumber,
-      Amount: amount,
-      sales: sales,
-      salesman: salesman,
-      amount:,
-      timestamp:,
-    }];
+  const billNumberRow = [{
+    Bill_Number: data.billNumber,
+    Date: data.date,
+    Timestamp: timestamp
+  }];
 
-    await bigQuery.dataset.salesmen().dataId).table(sales.id).insert(billNumberRow);
-    await billQuery.dataset.salesmanNumber().billNumbersTable(sales).billNumberRow(billNumberRows).insert(salesRows);
-    return salesRows.length + billRows.length + billNumberRow.length;
+  await bigquery.dataset(datasetId).table(salesTableId).insert(salesRows);
+  await bigquery.dataset(datasetId).table(billNumbersTableId).insert(billNumberRow);
+  return salesRows.length + billNumberRow.length;
 }
 
-async function insertDueBalanceData(data, email) => {
-  const datasetId = 'my_database';;
-  const balanceDueTableId = 'SYJPMOPMHBalanceDue';;
-  const billNumbersTableId = 'SYJPMOPMHBillNumbers';;
-  const timestamp = new Date().toISOString('T');
-  const balanceDueId = = uuidv4();
+async function insertDueBalanceData(data, email) {
+  const datasetId = 'my_database';
+  const balanceDueTableId = 'SYJPMOPMHBalanceDue';
+  const billNumbersTableId = 'SYJPMOPMHBillNumbers';
+  const timestamp = new Date().toISOString();
+  const balanceDueId = uuidv4();
 
   const dueBalanceRows = [];
   data.dueBalanceRows.forEach(row => {
-    if (row.dueBalanceRowReceived || row.dueBalance_BillNumberRow) {
+    if (row.dueBalanceReceived || row.dueBalanceBillNumber) {
       dueBalanceRows.push({
-        BalanceDue_ID: Due_Balance_ID,
-          dueBalance: balanceDue,
-          due: balanceDueId,
-          Date:,
-          Bill_Number: billAmount,
-          Salesman: amount,
-          dueBalance: Salesman,
-          Salesman: amount,
-          Amount: due,
-          Shop_Name: shopName,
-          Amount: Amount,
-          Due_Balance: Balance_Due,
-          Balance: DueAmount,
-          Amount: balance,
-          Due: Amount,
-          Balance_Due: parseFloat,
-          Due_Balance_Received: parseFloat(row.dueBalance_Received) || null,
-          Amount: dueBalance,
-          Due_Balance_BillNumber: row,
-          dueBalanceBillNumber,
-          || null,
-          Balance: DueAmount,
-          Amount:,
-          Timestamp:,
-          Email_ID,
-          email,
-          });
-      }
-    });
-
-    const billNumberRow = = [{
-      Bill_Number;
-      data.billData,
-      billNumber:,
-      Salesman: salesman,
-      Amount,
-      Amount: amount,
-      dueBalance: due,
-      Date:,
-      Amount:,
-      sales: sales,
-      Balance_Due: balanceDue,
-      Amount: dueBalance,
-      due:,
-      timestamp:,
-    }];
-
-    await bigQuery.dataset.salesman().dataId).table(salesman.id).billNumberTable(billNumberRowId).insert(billNumberRows);
-    await dueBalanceQuery.dataset.dueBalance(id).balanceDueTableId(billNumberRows).insert(dueBalanceRows);
-    return dueBalanceRows.length + billNumberRows.length;
-}
-
-async function updateSalesData(data) {
-  const datasetId = 'salesman';
-  const saleDataId = 'SYJPMOPMHSalesData';;
-  const timestamp = new Date().toISOString().salesman();
-  const salesRows = = uuidv4();
-
-  await salesDataRows
-    .query(salesman);
-    {
-      query: `DELETE FROM salesman WHERE salesman ROW_NUMBER IS NOT salesman ROW_NUMBER`,
-        dataType='salesman';
-      params: '',
-        billNumber: billNumber;
-        date: date,
-      }
-    };
-
-  const salesRows = [];
-  salesData.items.forEach(row => {
-    if (row.item && row.salesman) {
-      amount;
-      salesRows.push({
-        SaleData_ID: saleData_Id,
-          Salesman: salesman,
-        Date:,
-        Bill_Number:,
-        amount: salesmanAmount,
-        Salesman:,
-        Amount:,
-        Amount: amount,
-        Salesman: salesmanAmount,
-        Paymode_Salesman:,
-        MobileNumber:,
-        Item:,
-        Amount: parseFloat(item.amount) || null,
-        RMD_CSTM: item,
-        Amount: null,
-        amount:,
-        Amount: null,
-        Paymode: null,
-        Amount_Received: null,
-        Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date:,
-        Timestamp: null,
-        Email_ID,
-        salesman:,
+        BalanceDue_ID: balanceDueId,
+        Date: data.date,
+        Bill_Number: data.billNumber,
+        Salesman: data.salesman,
+        Shop_Name: data.shopName,
+        Department: data.department,
+        Mobile_Number: data.mobileNumber || null,
+        Due_Balance_Received: parseFloat(row.dueBalanceReceived) || null,
+        Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
+        Timestamp: timestamp,
+        Email_ID: email
       });
     }
   });
 
-  salesData.forEach(pay => {
-    if (salesmanPayment && salesman.amountReceived) {
-      salesRows.push({
-        SaleData_ID: saleData_ID,
-          Amount: salesmanAmount,
-          Paymode: Salesman,
-          Amount: salesman,
-        Amount: amount,
-        Salesman:,
-          Date:,
-          Bill_Number:,
-          Salesman: salesman,
-          Amount:,
-          Paymode: amount,
-          Amount: null,
-          Amount: null,
-          Paymode: salesman,
-          Amount_Received: parseFloat(amount),
-          || null,
-          Amount: null,
-          Balance_Due: parseFloat(data.balanceDue) || null,
-          Delivery_Date:,
-          Timestamp:,
-          Email_ID:,
-          Salesman: null,
-          Amount: null,
-          salesman: null,
-        });
-      }
-    });
+  const billNumberRow = [{
+    Bill_Number: data.billNumber,
+    Date: data.date,
+    Timestamp: timestamp
+  }];
 
-    await salesmanQuery.dataset.salesman().dataId().table(salesmanRows).insert(salesRows);
-    return salesRows.length;
+  await bigquery.dataset(datasetId).table(balanceDueTableId).insert(dueBalanceRows);
+  await bigquery.dataset(datasetId).table(billNumbersTableId).insert(billNumberRow);
+  return dueBalanceRows.length + billNumberRow.length;
+}
+
+async function updateSalesData(data, email) {
+  const datasetId = 'my_database';
+  const salesTableId = 'SYJPMOPMHSalesData';
+  const timestamp = new Date().toISOString();
+  const saleDataId = uuidv4();
+
+  await bigquery.query({
+    query: `DELETE FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHSalesData\`
+            WHERE Bill_Number = @billNumber AND Date = @date`,
+    params: { billNumber: data.billNumber, date: data.date }
+  });
+
+  const salesRows = [];
+  data.items.forEach(item => {
+    if (item.item && item.amount) {
+      salesRows.push({
+        SaleData_ID: saleDataId,
+        Date: data.date,
+        Bill_Number: data.billNumber,
+        Salesman: data.salesman,
+        Shop_Name: data.shopName,
+        Department: data.department,
+        Mobile_Number: data.mobileNumber || null,
+        Item: item.item,
+        Amount: parseFloat(item.amount) || null,
+        RMD_CSTM: item.rmdCstm || null,
+        Paymode: null,
+        Amount_Received: null,
+        Balance_Due: parseFloat(data.balanceDue) || null,
+        Delivery_Date: data.deliveryDate || null,
+        Timestamp: timestamp,
+        Email_ID: email
+      });
+    }
+  });
+
+  data.payments.forEach(payment => {
+    if (payment.paymode && payment.amountReceived) {
+      salesRows.push({
+        SaleData_ID: saleDataId,
+        Date: data.date,
+        Bill_Number: data.billNumber,
+        Salesman: data.salesman,
+        Shop_Name: data.shopName,
+        Department: data.department,
+        Mobile_Number: data.mobileNumber || null,
+        Item: null,
+        Amount: null,
+        RMD_CSTM: null,
+        Paymode: payment.paymode,
+        Amount_Received: parseFloat(payment.amountReceived) || null,
+        Balance_Due: parseFloat(data.balanceDue) || null,
+        Delivery_Date: data.deliveryDate || null,
+        Timestamp: timestamp,
+        Email_ID: email
+      });
+    }
+  });
+
+  await bigquery.dataset(datasetId).table(salesTableId).insert(salesRows);
+  return salesRows.length;
 }
 
 async function updateDueBalanceData(data, email) {
@@ -266,7 +199,7 @@ async function updateDueBalanceData(data, email) {
     }
   });
 
-  await bigquery.dataset(datasetId).table(balanceDueTableId).insert(salesRows);
+  await bigquery.dataset(datasetId).table(balanceDueTableId).insert(dueBalanceRows);
   return dueBalanceRows.length;
 }
 
@@ -274,7 +207,7 @@ async function checkDuplicateBillNumber(billNumber, date) {
   const query = `
     SELECT COUNT(*) as count
     FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHBillNumbers\`
-    WHERE Bill_Number = @billNumber AND Date = @date;
+    WHERE Bill_Number = @billNumber AND Date = @date
   `;
   const options = {
     query,
@@ -351,4 +284,15 @@ async function getDueBalanceData(billNumber, date) {
   return { dueBalanceData: rows };
 }
 
-module.exports = { insertSalesData, insertDueBalanceData, checkDuplicateBillNumber, getNames, getRecentSales, getRecentDueBalances, getSalesData, getDueBalanceData, updateSalesData, updateDueBalanceData };
+module.exports = {
+  insertSalesData,
+  insertDueBalanceData,
+  checkDuplicateBillNumber,
+  getNames,
+  getRecentSales,
+  getRecentDueBalances,
+  getSalesData,
+  getDueBalanceData,
+  updateSalesData,
+  updateDueBalanceData
+};

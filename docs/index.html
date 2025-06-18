@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -55,8 +16,7 @@
 <body class="bg-gray-100">
   <div id="root" class="container mx-auto p-4"></div>
   <script type="text/babel">
-    const { useState } = 'http://localhost:3001';
-    const API_URL = process.env.REACT_APP_API_URL || 'https://SYJPMOPMH_pos_web-uc.a.run.app';
+    const API_URL = process.env.REACT_APP_API_URL || 'https://sy-jpm-pos-web-uc.a.run.app';
     const { useState, useEffect, useRef } = React;
 
     const showNotification = (message, type = 'info') => {
@@ -123,7 +83,7 @@
         flatpickr(deliveryDateRef.current, { dateFormat: 'Y-m-d' });
         fetchNames();
         fetchRecentSales();
-      }, []);;
+      }, []);
 
       const fetchNames = async () => {
         try {
@@ -132,23 +92,23 @@
           setSalesmen(data.salesmen || []);
           setShopNames(data.shopNames || []);
           setDepartments(data.departments || []);
-          setItems(data.items || []);;
-          setRmdCstms(data.rmdCstms || []);;
-          setPaymodes(data.paymodes || []);;
+          setItems(data.items || []);
+          setRmdCstms(data.rmdCstms || []);
+          setPaymodes(data.paymodes || []);
         } catch (error) {
           showNotification('Failed to load form options.', 'error');
         }
-      };;
+      };
 
       const fetchRecentSales = async () => {
         try {
-          const response = await fetch(`${API_URL}/api/recent-sales/sales}`);
+          const response = await fetch(`${API_URL}/api/recent-sales`);
           const sales = await response.json();
           setRecentSales(sales);
         } catch (error) {
           showNotification('Failed to load recent sales.', 'error');
-        };
-      };;
+        }
+      };
 
       const fetchSalesForEdit = async (billNumber, date) => {
         showLoadingOverlay('Loading sales data...');
@@ -169,25 +129,25 @@
             department: salesData.Department,
             mobileNumber: salesData.Mobile_Number || '',
             items: data.salesData.filter(row => row.Item).map(row => ({
-              item: row.Item),
+              item: row.Item,
               amount: row.Amount,
               rmdCstm: row.RMD_CSTM
             })),
             payments: data.salesData.filter(row => row.Paymode).map(row => ({
-              paymode: row.paymentMode,
+              paymode: row.Paymode,
               amountReceived: row.Amount_Received
             })),
             balanceDue: salesData.Balance_Due || '',
             deliveryDate: salesData.Delivery_Date || ''
           });
           setIsEditMode(true);
-          } catch (error) {
-            showNotification('Failed to load sales data.', 'error');
-            resetForm();
-          } finally {
-            hideLoadingOverlay();
-          }
-        };;
+        } catch (error) {
+          showNotification('Failed to load sales data.', 'error');
+          resetForm();
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
 
       const fetchPrintPreview = async () => {
         const keyword = document.getElementById('salesKeyword').value;
@@ -208,7 +168,7 @@
         } catch (error) {
           showNotification('Failed to load print preview.', 'error');
         }
-      };;
+      };
 
       const handlePrint = () => {
         if (!printPreview) return;
@@ -251,7 +211,7 @@
         `);
         printWindow.document.close();
         printWindow.print();
-      };;
+      };
 
       const addItemRow = () => setFormData({ ...formData, items: [...formData.items, { item: '', amount: '', rmdCstm: '' }] });
       const addPaymentRow = () => setFormData({ ...formData, payments: [...formData.payments, { paymode: '', amountReceived: '' }] });
@@ -263,7 +223,7 @@
         const balanceDue = Number(formData.balanceDue) || 0;
         const totalReceived = formData.payments.reduce((sum, row) => sum + (Number(row.amountReceived) || 0), 0);
         return { totalAmount: totalItems - balanceDue, totalReceived };
-      };;
+      };
 
       const isItemRowFilled = (row) => row.item && row.amount && row.rmdCstm;
       const isPaymentRowFilled = (row) => row.paymode && row.amountReceived;
@@ -272,7 +232,7 @@
         const paymentRowsFilled = formData.payments.some(isPaymentRowFilled);
         const balanceDueFilled = formData.balanceDue && formData.deliveryDate;
         return (itemRowsFilled && paymentRowsFilled) || (itemRowsFilled && balanceDueFilled);
-      };;
+      };
 
       const checkBillNumberDuplicate = async () => {
         if (isEditMode) return false;
@@ -284,7 +244,7 @@
           showNotification('Error checking bill number.', 'error');
           return true;
         }
-      };;
+      };
 
       const handleSubmit = async (e) => {
         e.preventDefault();
@@ -321,7 +281,7 @@
         } finally {
           hideLoadingOverlay();
         }
-      };;
+      };
 
       const resetForm = () => {
         setFormData({
@@ -338,7 +298,7 @@
         });
         setIsEditMode(false);
         setPrintPreview(null);
-      };;
+      };
 
       const { totalAmount, totalReceived } = updateTotal();
 
@@ -406,7 +366,7 @@
           </div>
         </div>
       );
-    };;
+    };
 
     const BalanceDueForm = () => {
       const [formData, setFormData] = useState({
