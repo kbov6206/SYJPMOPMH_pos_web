@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud Run
+name: Deploy to Firebase Hosting and Functions
 
 on:
   push:
@@ -10,19 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - id: auth
-        uses: google-github-actions/auth@v1
+      - uses: actions/setup-node@v3
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@v1
-      - run: gcloud auth configure-docker
-      - run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web .
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web
-      - run: |
-          gcloud run deploy sy-jpm-pos-web \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web \
-            --platform managed \
-            --region us-central1 \
-            --allow-unauthenticated \
-            --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}
+          node-version: '22'
+      - run: npm install -g firebase-tools
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase deploy --only hosting,functions

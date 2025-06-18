@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { insertSalesData, checkDuplicateBillNumber, getNames, getRecentSales, getSalesData, updateSalesData, insertDueBalanceData, getRecentDueBalances, getDueBalanceData, updateDueBalanceData } = require('./bigquery');
 const app = express();
 
-app.use(cors({ origin: ['https://your-username.github.io', 'http://localhost:3000'] }));
+app.use(cors({ origin: ['https://kbov6206.github.io/SYJPMOPMH_pos_web', 'http://localhost:3000'] }));
 app.use(express.json());
 
 app.get('/api/names', async (req, res) => {
