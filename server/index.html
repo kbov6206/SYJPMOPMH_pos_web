@@ -1,0 +1,673 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYJ PM-POS Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-gray-100">
+  <div id="root" class="container mx-auto p-4"></div>
+  <script type="text/babel">
+    const { useState } = 'http://localhost:3001';
+    const API_URL = process.env.REACT_APP_API_URL || 'https://your-service-api-url.a.run.app'; // Set to your Cloud Run URL
+    const { useState, useEffect, useRef } = React;
+
+    const showNotification = (message, type = 'info') => {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    };
+
+    const showLoadingOverlay = (message = 'Loading...') => {
+      let overlay = document.getElementById('loadingOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50';
+        overlay.innerHTML = `
+          <div class="animate-spin border-4 border-t-white border-gray-300 rounded-full w-10 h-10"></div>
+          <p id="loadingMessage" class="text-white mt-4">${message}</p>
+        `;
+        document.body.appendChild(overlay);
+      } else {
+        document.getElementById('loadingMessage').textContent = message;
+        overlay.style.display = 'flex';
+      }
+      document.body.style.overflow = 'hidden';
+    };
+
+    const hideLoadingOverlay = () => {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    };
+
+    const SalesForm = () => {
+      const [formData, setFormData] = useState({
+        date: new Date().toISOString().split('T')[0],
+        billNumber: '',
+        salesman: '',
+        shopName: '',
+        department: '',
+        mobileNumber: '',
+        items: [{ item: '', amount: '', rmdCstm: '' }],
+        payments: [{ paymode: '', amountReceived: '' }],
+        balanceDue: '',
+        deliveryDate: ''
+      });
+      const [isEditMode, setIsEditMode] = useState(false);
+      const [salesmen, setSalesmen] = useState([]);
+      const [shopNames, setShopNames] = useState([]);
+      const [departments, setDepartments] = useState([]);
+      const [items, setItems] = useState([]);
+      const [rmdCstms, setRmdCstms] = useState([]);
+      const [paymodes, setPaymodes] = useState([]);
+      const [recentSales, setRecentSales] = useState([]);
+      const [printPreview, setPrintPreview] = useState(null);
+      const dateRef = useRef(null);
+      const deliveryDateRef = useRef(null);
+
+      useEffect(() => {
+        flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
+        flatpickr(deliveryDateRef.current, { dateFormat: 'Y-m-d' });
+        fetchNames();
+        fetchRecentSales();
+      }, []);;
+
+      const fetchNames = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/names`);
+          const data = await response.json();
+          setSalesmen(data.salesmen || []);
+          setShopNames(data.shopNames || []);
+          setDepartments(data.departments || []);
+          setItems(data.items || []);;
+          setRmdCstms(data.rmdCstms || []);;
+          setPaymodes(data.paymodes || []);;
+        } catch (error) {
+          showNotification('Failed to load form options.', 'error');
+        }
+      };;
+
+      const fetchRecentSales = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/recent-sales/sales}`);
+          const sales = await response.json();
+          setRecentSales(sales);
+        } catch (error) {
+          showNotification('Failed to load recent sales.', 'error');
+        };
+      };;
+
+      const fetchSalesForEdit = async (billNumber, date) => {
+        showLoadingOverlay('Loading sales data...');
+        try {
+          const response = await fetch(`${API_URL}/api/sales?billNumber=${billNumber}&date=${date}`);
+          const data = await response.json();
+          if (!data.salesData?.length) {
+            showNotification('No data found.', 'error');
+            resetForm();
+            return;
+          }
+          const salesData = data.salesData[0];
+          setFormData({
+            date: salesData.Date,
+            billNumber: salesData.Bill_Number,
+            salesman: salesData.Salesman,
+            shopName: salesData.Shop_Name,
+            department: salesData.Department,
+            mobileNumber: salesData.Mobile_Number || '',
+            items: data.salesData.filter(row => row.Item).map(row => ({
+              item: row.Item),
+              amount: row.Amount,
+              rmdCstm: row.RMD_CSTM
+            })),
+            payments: data.salesData.filter(row => row.Paymode).map(row => ({
+              paymode: row.paymentMode,
+              amountReceived: row.Amount_Received
+            })),
+            balanceDue: salesData.Balance_Due || '',
+            deliveryDate: salesData.Delivery_Date || ''
+          });
+          setIsEditMode(true);
+          } catch (error) {
+            showNotification('Failed to load sales data.', 'error');
+            resetForm();
+          } finally {
+            hideLoadingOverlay();
+          }
+        };;
+
+      const fetchPrintPreview = async () => {
+        const keyword = document.getElementById('salesKeyword').value;
+        const date = formData.date;
+        if (!keyword || !date) {
+          showNotification('Enter bill number and date.', 'error');
+          return;
+        }
+        try {
+          const response = await fetch(`${API_URL}/api/sales?billNumber=${keyword}&date=${date}`);
+          const data = await response.json();
+          if (!data.salesData?.length) {
+            showNotification('No data found.', 'error');
+            setPrintPreview(null);
+            return;
+          }
+          setPrintPreview(data);
+        } catch (error) {
+          showNotification('Failed to load print preview.', 'error');
+        }
+      };;
+
+      const handlePrint = () => {
+        if (!printPreview) return;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head><style>
+              body { font-family: Arial; font-size: 10pt; margin: 5mm; }
+              h3 { font-size: 12pt; text-align: center; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border-bottom: 1px dotted #000; padding: 2mm; }
+              .header-row { display: flex; justify-content: space-between; }
+            </style></head>
+            <body>
+              <h3>Sales Receipt</h3>
+              <div class="header-row">
+                <p>Bill Number: ${printPreview.salesData[0].Bill_Number}</p>
+                <p>Date: ${printPreview.salesData[0].Date}</p>
+              </div>
+              <p>Salesman: ${printPreview.salesData[0].Salesman}</p>
+              <p>Shop Name: ${printPreview.salesData[0].Shop_Name}</p>
+              <p>Department: ${printPreview.salesData[0].Department}</p>
+              <p>Mobile Number: ${printPreview.salesData[0].Mobile_Number || '-'}</p>
+              <table>
+                <tr><th>Item</th><th>Amount</th><th>RMD/CSTM</th></tr>
+                ${printPreview.salesData.filter(row => row.Item).map(row => `
+                  <tr><td>${row.Item}</td><td>${row.Amount}</td><td>${row.RMD_CSTM}</td></tr>
+                `).join('')}
+              </table>
+              <p>Balance Due: ${printPreview.salesData[0].Balance_Due || 0}</p>
+              <p>Delivery Date: ${printPreview.salesData[0].Delivery_Date || '-'}</p>
+              <div>
+                ${printPreview.salesData.filter(row => row.Paymode).map(row => `
+                  <p>${row.Paymode}: ${row.Amount_Received}</p>
+                `).join('')}
+              </div>
+              <p>Total Amount Received: ${printPreview.salesData.filter(row => row.Paymode).reduce((sum, row) => sum + Number(row.Amount_Received), 0)}</p>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      };;
+
+      const addItemRow = () => setFormData({ ...formData, items: [...formData.items, { item: '', amount: '', rmdCstm: '' }] });
+      const addPaymentRow = () => setFormData({ ...formData, payments: [...formData.payments, { paymode: '', amountReceived: '' }] });
+      const removeItemRow = (index) => setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
+      const removePaymentRow = (index) => setFormData({ ...formData, payments: formData.payments.filter((_, i) => i !== index) });
+
+      const updateTotal = () => {
+        const totalItems = formData.items.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+        const balanceDue = Number(formData.balanceDue) || 0;
+        const totalReceived = formData.payments.reduce((sum, row) => sum + (Number(row.amountReceived) || 0), 0);
+        return { totalAmount: totalItems - balanceDue, totalReceived };
+      };;
+
+      const isItemRowFilled = (row) => row.item && row.amount && row.rmdCstm;
+      const isPaymentRowFilled = (row) => row.paymode && row.amountReceived;
+      const isValidCombination = () => {
+        const itemRowsFilled = formData.items.some(isItemRowFilled);
+        const paymentRowsFilled = formData.payments.some(isPaymentRowFilled);
+        const balanceDueFilled = formData.balanceDue && formData.deliveryDate;
+        return (itemRowsFilled && paymentRowsFilled) || (itemRowsFilled && balanceDueFilled);
+      };;
+
+      const checkBillNumberDuplicate = async () => {
+        if (isEditMode) return false;
+        try {
+          const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
+          const { isDuplicate } = await response.json();
+          return isDuplicate;
+        } catch (error) {
+          showNotification('Error checking bill number.', 'error');
+          return true;
+        }
+      };;
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.department) {
+          showNotification('Fill all required fields.', 'error');
+          return;
+        }
+        if (await checkBillNumberDuplicate()) {
+          showNotification('Bill number and date already exist.', 'error');
+          return;
+        }
+        if (!isValidCombination()) {
+          showNotification('Fill at least one item and payment row, or include balance due with delivery date.', 'error');
+          return;
+        }
+        const { totalAmount, totalReceived } = updateTotal();
+        if (totalAmount !== totalReceived) {
+          showNotification('Total Amount and Amount Received must match.', 'error');
+          return;
+        }
+        showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
+        try {
+          const response = await fetch(`${API_URL}/api/sales${isEditMode ? '/update' : ''}`, {
+            method: isEditMode ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+          const result = await response.json();
+          showNotification(`Sales data ${isEditMode ? 'updated' : 'saved'}!`, 'success');
+          resetForm();
+          fetchRecentSales();
+        } catch (error) {
+          showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
+        } finally {
+          hideLoadingOverlay();
+        }
+      };;
+
+      const resetForm = () => {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          billNumber: '',
+          salesman: '',
+          shopName: '',
+          department: '',
+          mobileNumber: '',
+          items: [{ item: '', amount: '', rmdCstm: '' }],
+          payments: [{ paymode: '', amountReceived: '' }],
+          balanceDue: '',
+          deliveryDate: ''
+        });
+        setIsEditMode(false);
+        setPrintPreview(null);
+      };;
+
+      const { totalAmount, totalReceived } = updateTotal();
+
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-center mb-4">Sales Data Entry</h2>
+          <div className="flex justify-between mb-4">
+            <button onClick={addItemRow} className="bg-green-500 text-white px-4 py-2 rounded">Add Item</button>
+            <button onClick={addPaymentRow} className="bg-green-500 text-white px-4 py-2 rounded">Add Payment</button>
+            <button onClick={() => document.getElementById('salesPrintSidebar').classList.toggle('open')} className="bg-blue-500 text-white px-4 py-2 rounded">Print Preview</button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className="block font-bold">Date</label><input ref={dateRef} type="text" className="w-full p-2 border rounded" required /></div>
+              <div><label className="block font-bold">Bill Number</label><input type="text" value={formData.billNumber} onChange={(e) => setFormData({ ...formData, billNumber: e.target.value })} className="w-full p-2 border rounded" required /></div>
+              <div><label className="block font-bold">Salesman</label><select value={formData.salesman} onChange={(e) => setFormData({ ...formData, salesman: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{salesmen.map(name => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div><label className="block font-bold">Shop Name</label><select value={formData.shopName} onChange={(e) => setFormData({ ...formData, shopName: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{shopNames.map(name => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div><label className="block font-bold">Department</label><select value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}</select></div>
+              <div><label className="block font-bold">Mobile Number</label><input type="tel" value={formData.mobileNumber} onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') })} className="w-full p-2 border rounded" /></div>
+              <div><label className="block font-bold">Balance Due</label><input type="number" value={formData.balanceDue} onChange={(e) => setFormData({ ...formData, balanceDue: e.target.value })} className="w-full p-2 border rounded" /></div>
+              <div><label className="block font-bold">Delivery Date</label><input ref={deliveryDateRef} type="text" className="w-full p-2 border rounded" /></div>
+            </div>
+            <div>
+              <h3 className="font-bold">Items</h3>
+              {formData.items.map((row, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <select value={row.item} onChange={(e) => { const newItems = [...formData.items]; newItems[index].item = e.target.value; setFormData({ ...formData, items: newItems }); }} className="p-2 border rounded flex-1"><option value="">Select</option>{items.map(item => <option key={item} value={item}>{item}</option>)}</select>
+                  <input type="number" value={row.amount} onChange={(e) => { const newItems = [...formData.items]; newItems[index].amount = e.target.value; setFormData({ ...formData, items: newItems }); }} className="p-2 border rounded flex-1" placeholder="Amount" />
+                  <select value={row.rmdCstm} onChange={(e) => { const newItems = [...formData.items]; newItems[index].rmdCstm = e.target.value; setFormData({ ...formData, items: newItems }); }} className="p-2 border rounded flex-1"><option value="">Select</option>{rmdCstms.map(rmd => <option key={rmd} value={rmd}>{rmd}</option>)}</select>
+                  <button type="button" onClick={() => removeItemRow(index)} className="bg-red-500 text-white px-2 rounded">X</button>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h3 className="font-bold">Payments</h3>
+              {formData.payments.map((row, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <select value={row.paymode} onChange={(e) => { const newPayments = [...formData.payments]; newPayments[index].paymode = e.target.value; setFormData({ ...formData, payments: newPayments }); }} className="p-2 border rounded flex-1"><option value="">Select</option>{paymodes.map(mode => <option key={mode} value={mode}>{mode}</option>)}</select>
+                  <input type="number" value={row.amountReceived} onChange={(e) => { const newPayments = [...formData.payments]; newPayments[index].amountReceived = e.target.value; setFormData({ ...formData, payments: newPayments }); }} className="p-2 border rounded flex-1" placeholder="Amount" />
+                  <button type="button" onClick={() => removePaymentRow(index)} className="bg-red-500 text-white px-2 rounded">X</button>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between">
+              <p>Total Amount: {totalAmount.toFixed(2)}</p>
+              <p>Amount Received: {totalReceived.toFixed(2)}</p>
+            </div>
+            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">{isEditMode ? 'Update' : 'Save'}</button>
+            <button type="button" onClick={resetForm} className="bg-gray-500 text-white px-4 py-2 rounded ml-2">Clear</button>
+          </form>
+          <div id="salesPrintSidebar" className="fixed top-0 right-0 h-full bg-white p-4 shadow-lg translate-x-full transition-transform">
+            <button onClick={() => document.getElementById('salesPrintSidebar').classList.toggle('open')} className="text-red-500 mb-4">Close</button>
+            <input id="salesKeyword" type="text" placeholder="Bill Number" className="w-full p-2 border rounded mb-2" />
+            <button onClick={fetchPrintPreview} className="bg-blue-500 text-white px-4 py-2 rounded mb-2">Preview</button>
+            {printPreview && <button onClick={handlePrint} className="bg-green-500 text-white px-4 py-2 rounded">Print</button>}
+          </div>
+          <div className="mt-6">
+            <h3 className="font-bold">Recent Sales</h3>
+            <table className="w-full border-collapse">
+              <thead><tr className="bg-gray-200"><th className="p-2">Date</th><th className="p-2">Bill Number</th><th className="p-2">Action</th></tr></thead>
+              <tbody>{recentSales.map(sale => (
+                <tr key={sale.Bill_Number}><td className="p-2">{sale.Date}</td><td className="p-2">{sale.Bill_Number}</td><td className="p-2"><button onClick={() => fetchSalesForEdit(sale.Bill_Number, sale.Date)} className="bg-yellow-500 text-white px-2 rounded">Edit</button></td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      );
+    };;
+
+    const BalanceDueForm = () => {
+      const [formData, setFormData] = useState({
+        date: new Date().toISOString().split('T')[0],
+        billNumber: '',
+        salesman: '',
+        shopName: '',
+        department: '',
+        mobileNumber: '',
+        dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
+      });
+      const [isEditMode, setIsEditMode] = useState(false);
+      const [salesmen, setSalesmen] = useState([]);
+      const [shopNames, setShopNames] = useState([]);
+      const [departments, setDepartments] = useState([]);
+      const [recentDueBalances, setRecentDueBalances] = useState([]);
+      const [printPreview, setPrintPreview] = useState(null);
+      const dateRef = useRef(null);
+
+      useEffect(() => {
+        flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
+        fetchNames();
+        fetchRecentDueBalances();
+      }, []);
+
+      const fetchNames = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/names`);
+          const data = await response.json();
+          setSalesmen(data.salesmen || []);
+          setShopNames(data.shopNames || []);
+          setDepartments(data.departments || []);
+        } catch (error) {
+          showNotification('Failed to load form options.', 'error');
+        }
+      };
+
+      const fetchRecentDueBalances = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/recent-due-balances`);
+          const data = await response.json();
+          setRecentDueBalances(data);
+        } catch (error) {
+          showNotification('Failed to load recent due balances.', 'error');
+        }
+      };
+
+      const fetchDueBalanceForEdit = async (billNumber, date) => {
+        showLoadingOverlay('Loading due balance data...');
+        try {
+          const response = await fetch(`${API_URL}/api/due-balance?billNumber=${billNumber}&date=${date}`);
+          const data = await response.json();
+          if (!data.dueBalanceData?.length) {
+            showNotification('No data found.', 'error');
+            resetForm();
+            return;
+          }
+          const dueBalanceData = data.dueBalanceData[0];
+          setFormData({
+            date: dueBalanceData.Date,
+            billNumber: dueBalanceData.Bill_Number,
+            salesman: dueBalanceData.Salesman,
+            shopName: dueBalanceData.Shop_Name,
+            department: dueBalanceData.Department,
+            mobileNumber: dueBalanceData.Mobile_Number || '',
+            dueBalanceRows: data.dueBalanceData.filter(row => row.Due_Balance_Received || row.Due_Balance_Bill_Number).map(row => ({
+              dueBalanceReceived: row.Due_Balance_Received || '',
+              dueBalanceBillNumber: row.Due_Balance_Bill_Number || ''
+            }))
+          });
+          setIsEditMode(true);
+        } catch (error) {
+          showNotification('Failed to load due balance data.', 'error');
+          resetForm();
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
+
+      const fetchDueBalancePrintPreview = async () => {
+        const keyword = document.getElementById('dueBalanceKeyword').value;
+        const date = formData.date;
+        if (!keyword || !date) {
+          showNotification('Enter bill number and date.', 'error');
+          return;
+        }
+        try {
+          const response = await fetch(`${API_URL}/api/due-balance?billNumber=${keyword}&date=${date}`);
+          const data = await response.json();
+          if (!data.dueBalanceData?.length) {
+            showNotification('No data found.', 'error');
+            setPrintPreview(null);
+            return;
+          }
+          setPrintPreview(data);
+        } catch (error) {
+          showNotification('Failed to load print preview.', 'error');
+        }
+      };
+
+      const handlePrint = () => {
+        if (!printPreview) return;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head><style>
+              body { font-family: Arial; font-size: 10pt; margin: 5mm; }
+              h3 { font-size: 12pt; text-align: center; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border-bottom: 1px dotted #000; padding: 2mm; }
+              .header-row { display: flex; justify-content: space-between; }
+            </style></head>
+            <body>
+              <h3>Due Balance Receipt</h3>
+              <div class="header-row">
+                <p>Bill Number: ${printPreview.dueBalanceData[0].Bill_Number}</p>
+                <p>Date: ${printPreview.dueBalanceData[0].Date}</p>
+              </div>
+              <p>Salesman: ${printPreview.dueBalanceData[0].Salesman}</p>
+              <p>Shop Name: ${printPreview.dueBalanceData[0].Shop_Name}</p>
+              <p>Department: ${printPreview.dueBalanceData[0].Department}</p>
+              <p>Mobile Number: ${printPreview.dueBalanceData[0].Mobile_Number || '-'}</p>
+              <table>
+                <tr><th>Due Balance Received</th><th>Due Balance Bill Number</th></tr>
+                ${printPreview.dueBalanceData.filter(row => row.Due_Balance_Received || row.Due_Balance_Bill_Number).map(row => `
+                  <tr><td>${row.Due_Balance_Received || '-'}</td><td>${row.Due_Balance_Bill_Number || '-'}</td></tr>
+                `).join('')}
+              </table>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      };
+
+      const addDueBalanceRow = () => setFormData({ ...formData, dueBalanceRows: [...formData.dueBalanceRows, { dueBalanceReceived: '', dueBalanceBillNumber: '' }] });
+      const removeDueBalanceRow = (index) => setFormData({ ...formData, dueBalanceRows: formData.dueBalanceRows.filter((_, i) => i !== index) });
+
+      const isDueBalanceRowFilled = (row) => row.dueBalanceReceived || row.dueBalanceBillNumber;
+
+      const checkBillNumberDuplicate = async () => {
+        if (isEditMode) return false;
+        try {
+          const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
+          const { isDuplicate } = await response.json();
+          return isDuplicate;
+        } catch (error) {
+          showNotification('Error checking bill number.', 'error');
+          return true;
+        }
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.department) {
+          showNotification('Fill all required fields.', 'error');
+          return;
+        }
+        if (await checkBillNumberDuplicate()) {
+          showNotification('Bill number and date already exist.', 'error');
+          return;
+        }
+        if (!formData.dueBalanceRows.some(isDueBalanceRowFilled)) {
+          showNotification('Fill at least one due balance row.', 'error');
+          return;
+        }
+        showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
+        try {
+          const response = await fetch(`${API_URL}/api/due-balance${isEditMode ? '/update' : ''}`, {
+            method: isEditMode ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+          const result = await response.json();
+          showNotification(`Due balance data ${isEditMode ? 'updated' : 'saved'}!`, 'success');
+          resetForm();
+          fetchRecentDueBalances();
+        } catch (error) {
+          showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
+
+      const resetForm = () => {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          billNumber: '',
+          salesman: '',
+          shopName: '',
+          department: '',
+          mobileNumber: '',
+          dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
+        });
+        setIsEditMode(false);
+        setPrintPreview(null);
+      };
+
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-lg mt-6">
+          <h2 className="text-2xl font-bold text-center mb-4">Due Balance Entry</h2>
+          <div className="flex justify-between mb-4">
+            <button onClick={addDueBalanceRow} className="bg-green-500 text-white px-4 py-2 rounded">Add Row</button>
+            <button onClick={() => document.getElementById('dueBalancePrintSidebar').classList.toggle('open')} className="bg-blue-500 text-white px-4 py-2 rounded">Print Preview</button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className="block font-bold">Date</label><input ref={dateRef} type="text" className="w-full p-2 border rounded" required /></div>
+              <div><label className="block font-bold">Bill Number</label><input type="text" value={formData.billNumber} onChange={(e) => setFormData({ ...formData, billNumber: e.target.value })} className="w-full p-2 border rounded" required /></div>
+              <div><label className="block font-bold">Salesman</label><select value={formData.salesman} onChange={(e) => setFormData({ ...formData, salesman: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{salesmen.map(name => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div><label className="block font-bold">Shop Name</label><select value={formData.shopName} onChange={(e) => setFormData({ ...formData, shopName: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{shopNames.map(name => <option key={name} value={name}>{name}</option>)}</select></div>
+              <div><label className="block font-bold">Department</label><select value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} className="w-full p-2 border rounded" required><option value="">Select</option>{departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}</select></div>
+              <div><label className="block font-bold">Mobile Number</label><input type="tel" value={formData.mobileNumber} onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') })} className="w-full p-2 border rounded" /></div>
+            </div>
+            <div>
+              <h3 className="font-bold">Due Balance Details</h3>
+              {formData.dueBalanceRows.map((row, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input type="number" value={row.dueBalanceReceived} onChange={(e) => { const newRows = [...formData.dueBalanceRows]; newRows[index].dueBalanceReceived = e.target.value; setFormData({ ...formData, dueBalanceRows: newRows }); }} className="p-2 border rounded flex-1" placeholder="Due Balance Received" />
+                  <input type="text" value={row.dueBalanceBillNumber} onChange={(e) => { const newRows = [...formData.dueBalanceRows]; newRows[index].dueBalanceBillNumber = e.target.value; setFormData({ ...formData, dueBalanceRows: newRows }); }} className="p-2 border rounded flex-1" placeholder="Due Balance Bill Number" />
+                  <button type="button" onClick={() => removeDueBalanceRow(index)} className="bg-red-500 text-white px-2 rounded">X</button>
+                </div>
+              ))}
+            </div>
+            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">{isEditMode ? 'Update' : 'Save'}</button>
+            <button type="button" onClick={resetForm} className="bg-gray-500 text-white px-4 py-2 rounded ml-2">Clear</button>
+          </form>
+          <div id="dueBalancePrintSidebar" className="fixed top-0 right-0 h-full bg-white p-4 shadow-lg translate-x-full transition-transform">
+            <button onClick={() => document.getElementById('dueBalancePrintSidebar').classList.toggle('open')} className="text-red-500 mb-4">Close</button>
+            <input id="dueBalanceKeyword" type="text" placeholder="Bill Number" className="w-full p-2 border rounded mb-2" />
+            <button onClick={fetchDueBalancePrintPreview} className="bg-blue-500 text-white px-4 py-2 rounded mb-2">Preview</button>
+            {printPreview && <button onClick={handlePrint} className="bg-green-500 text-white px-4 py-2 rounded">Print</button>}
+          </div>
+          <div className="mt-6">
+            <h3 className="font-bold">Recent Due Balances</h3>
+            <table className="w-full border-collapse">
+              <thead><tr className="bg-gray-200"><th className="p-2">Date</th><th className="p-2">Bill Number</th><th className="p-2">Action</th></tr></thead>
+              <tbody>{recentDueBalances.map(due => (
+                <tr key={due.Bill_Number}><td className="p-2">{due.Date}</td><td className="p-2">{due.Bill_Number}</td><td className="p-2"><button onClick={() => fetchDueBalanceForEdit(due.Bill_Number, due.Date)} className="bg-yellow-500 text-white px-2 rounded">Edit</button></td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [activeModule, setActiveModule] = useState('sales');
+
+      return (
+        <div>
+          <div className="flex justify-center space-x-4 mb-6">
+            <button onClick={() => setActiveModule('sales')} className={`px-4 py-2 rounded ${activeModule === 'sales' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>Sales</button>
+            <button onClick={() => setActiveModule('dueBalance')} className={`px-4 py-2 rounded ${activeModule === 'dueBalance' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>Due Balance</button>
+          </div>
+          {activeModule === 'sales' ? <SalesForm /> : <BalanceDueForm />}
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
