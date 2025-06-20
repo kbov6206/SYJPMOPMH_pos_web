@@ -6,8 +6,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - id: auth
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Authenticate with Google Cloud
+      id: auth
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -28,3 +30,6 @@ jobs:
           --allow-unauthenticated \
           --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
           --service-account syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com
+    - name: Verify Deployment
+      run: |
+        curl https://sy-jpm-pos-web-uc.a.run.app/health
