@@ -1,7 +1,7 @@
 FROM node:22
 WORKDIR /app
-COPY package*.json ./
+COPY server/package.json .
 RUN npm install
-COPY . .
+COPY server .
 EXPOSE 8080
 CMD ["npm", "start"]
