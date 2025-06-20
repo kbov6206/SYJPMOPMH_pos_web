@@ -1,28 +1,30 @@
-name: Deploy to Google Cloud Run
-
+name: Deploy to Cloud Run
 on:
   push:
-    branches:
-      - main
-
+    branches: [ main ]
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@v1
-      - run: gcloud auth configure-docker
-      - run: |
-          docker build -t gcr.io/myposdata/sy-jpm-pos-web .
-          docker push gcr.io/myposdata/sy-jpm-pos-web
-      - run: |
-          gcloud run deploy sy-jpm-pos-web \
-            --image gcr.io/myposdata/sy-jpm-pos-web \
-            --platform managed \
-            --region us-central1 \
-            --allow-unauthenticated \
-            --set-env-vars GOOGLE_CLOUD_PROJECT=myposdata
+    - uses: actions/checkout@v3
+    - id: auth
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web .
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy sy-jpm-pos-web \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/sy-jpm-pos-web \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --set-env-vars GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }},GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json \
+          --service-account syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com
