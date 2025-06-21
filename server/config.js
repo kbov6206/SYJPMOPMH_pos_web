@@ -1,3 +1,3 @@
 module.exports = {
-  projectId: 'myposdata',
+  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'sy-jpm-pos-web',
 };

@@ -122,10 +122,10 @@ async function getRecentDueBalances() {
 async function getNames() {
   try {
     const salesmenQuery = `SELECT DISTINCT Salesman FROM \`${config.projectId}.${datasetId}.SalesData\` WHERE Salesman IS NOT NULL ORDER BY Salesman`;
-    const shopNamesQuery = `SELECT DISTINCT shop_name FROM \`${config.projectId}.${datasetId}.SalesShopName\` WHERE shop_name IS NOT NULL ORDER BY shop_name`;
-    const departmentsQuery = `SELECT DISTINCT department FROM \`${config.projectId}.${datasetId}.SalesDepartment\` WHERE department IS NOT NULL ORDER BY department`;
+    const shopNamesQuery = `SELECT DISTINCT Shop_Name FROM \`${config.projectId}.${datasetId}.SalesShopName\` WHERE Shop_Name IS NOT NULL ORDER BY Shop_Name`;
+    const departmentsQuery = `SELECT DISTINCT Department FROM \`${config.projectId}.${datasetId}.SalesDepartment\` WHERE Department IS NOT NULL ORDER BY Department`;
     const itemsQuery = `SELECT DISTINCT Item FROM \`${config.projectId}.${datasetId}.Items\` WHERE Item IS NOT NULL ORDER BY Item`;
-    const rmdCstmsQuery = `SELECT DISTINCT rmd_cstm FROM \`${config.projectId}.${datasetId}.SalesRmdCstm\` WHERE rmd_cstm IS NOT NULL ORDER BY rmd_cstm`;
+    const rmdCstmsQuery = `SELECT DISTINCT RMD_CSTM FROM \`${config.projectId}.${datasetId}.SalesRmdCstm\` WHERE RMD_CSTM IS NOT NULL ORDER BY RMD_CSTM`;
     const paymodesQuery = `SELECT DISTINCT Paymode FROM \`${config.projectId}.${datasetId}.Paymode\` WHERE Paymode IS NOT NULL ORDER BY Paymode`;
 
     const [[salesmen], [shopNames], [departments], [items], [rmdCstms], [paymodes]] = await Promise.all([
@@ -139,10 +139,10 @@ async function getNames() {
 
     return {
       salesmen: salesmen.map(row => row.Salesman),
-      shopNames: shopNames.map(row => row.shop_name),
-      departments: departments.map(row => row.department),
+      shopNames: shopNames.map(row => row.Shop_Name),
+      departments: departments.map(row => row.Department),
       items: items.map(row => row.Item),
-      rmdCstms: rmdCstms.map(row => row.rmd_cstm),
+      rmdCstms: rmdCstms.map(row => row.RMD_CSTM),
       paymodes: paymodes.map(row => row.Paymode),
     };
   } catch (error) {
