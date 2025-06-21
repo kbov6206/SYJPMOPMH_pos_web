@@ -7,12 +7,8 @@ RUN npm install
 
 COPY server/ .
 
-# Copy service account key
-COPY server/credentials.json .
-
 ENV PORT=8080
 ENV GOOGLE_CLOUD_PROJECT=myposdata
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
 
 EXPOSE 8080
 

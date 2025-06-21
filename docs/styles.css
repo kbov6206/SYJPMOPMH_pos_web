@@ -1,7 +1,9 @@
-#salesPrintSidebar, #dueBalancePrintSidebar {
+#salesPrintSidebar,
+#dueBalancePrintSidebar {
   width: 300px;
 }
-#salesPrintSidebar.open, #dueBalancePrintSidebar.open {
+#salesPrintSidebar.open,
+#dueBalancePrintSidebar.open {
   transform: translateX(0);
 }
 input[type="number"]::-webkit-inner-spin-button,

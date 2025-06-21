@@ -1,298 +1,299 @@
 const { BigQuery } = require('@google-cloud/bigquery');
-const { v4: uuidv4 } = require('uuid');
+const config = require('./config');
 
-const bigquery = new BigQuery();
+const bigquery = new BigQuery({
+  projectId: config.projectId,
+});
 
-async function insertSalesData(data, email) {
-  const datasetId = 'my_database';
-  const salesTableId = 'SYJPMOPMHSalesData';
-  const billNumbersTableId = 'SYJPMOPMHBillNumbers';
-  const timestamp = BigQuery.timestamp(new Date());
-  const saleDataId = uuidv4();
+const datasetId = 'my_database';
 
-  const salesRows = [];
-  data.items.forEach(item => {
-    if (item.item && item.amount) {
-      salesRows.push({
-        SaleData_ID: saleDataId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
+async function insertSalesData(data, userEmail) {
+  try {
+    const tableId = 'SYJPMOPMHSalesData';
+    const rows = data.items.flatMap(item => {
+      const baseRow = {
+        Date: data.date || null,
+        Bill_Number: data.billNumber || null,
+        Salesman: data.salesman || null,
+        Shop_Name: data.shopName || null,
+        Department: data.department || null,
         Mobile_Number: data.mobileNumber || null,
-        Item: item.item,
+        Balance_Due: parseFloat(data.balanceDue) || null,
+        Delivery_Date: data.deliveryDate || null,
+        Email_ID: userEmail,
+        Timestamp: BigQuery.timestamp(new Date()),
+      };
+      return (data.payments || []).map(payment => ({
+        ...baseRow,
+        Item: item.item || null,
         Amount: parseFloat(item.amount) || null,
         RMD_CSTM: item.rmdCstm || null,
-        Paymode: null,
-        Amount_Received: null,
-        Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date: data.deliveryDate || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
-
-  data.payments.forEach(payment => {
-    if (payment.paymode && payment.amountReceived) {
-      salesRows.push({
-        SaleData_ID: saleDataId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
-        Mobile_Number: data.mobileNumber || null,
-        Item: null,
-        Amount: null,
-        RMD_CSTM: null,
-        Paymode: payment.paymode,
+        Paymode: payment.paymode || null,
         Amount_Received: parseFloat(payment.amountReceived) || null,
-        Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date: data.deliveryDate || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
+      }));
+    });
 
-  const billNumberRow = [{
-    Bill_Number: data.billNumber,
-    Date: data.date,
-    Timestamp: timestamp
-  }];
+    if (rows.length === 0) throw new Error('No rows to insert');
 
-  await bigquery.dataset(datasetId).table(salesTableId).insert(salesRows);
-  await bigquery.dataset(datasetId).table(billNumbersTableId).insert(billNumberRow);
-  return salesRows.length + billNumberRow.length;
-}
+    await bigquery.dataset(datasetId).table(tableId).insert(rows);
 
-async function insertDueBalanceData(data, email) {
-  const datasetId = 'my_database';
-  const balanceDueTableId = 'SYJPMOPMHBalanceDue';
-  const billNumbersTableId = 'SYJPMOPMHBillNumbers';
-  const timestamp = BigQuery.timestamp(new Date());
-  const balanceDueId = uuidv4();
+    await bigquery.dataset(datasetId).table('SYJPMOPMHBillNumbers').insert({
+      Date: data.date || null,
+      Bill_Number: data.billNumber || null,
+      Email_ID: userEmail,
+      Timestamp: BigQuery.timestamp(new Date()),
+    });
 
-  const dueBalanceRows = [];
-  data.dueBalanceRows.forEach(row => {
-    if (row.dueBalanceReceived || row.dueBalanceBillNumber) {
-      dueBalanceRows.push({
-        BalanceDue_ID: balanceDueId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
-        Mobile_Number: data.mobileNumber || null,
-        Due_Balance_Received: row.dueBalanceReceived || null, // Keep as STRING
-        Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
-
-  const billNumberRow = [{
-    Bill_Number: data.billNumber,
-    Date: data.date,
-    Timestamp: timestamp
-  }];
-
-  await bigquery.dataset(datasetId).table(balanceDueTableId).insert(dueBalanceRows);
-  await bigquery.dataset(datasetId).table(billNumbersTableId).insert(billNumberRow);
-  return dueBalanceRows.length + billNumberRow.length;
-}
-
-async function updateSalesData(data, email) {
-  const datasetId = 'my_database';
-  const salesTableId = 'SYJPMOPMHSalesData';
-  const timestamp = BigQuery.timestamp(new Date());
-  const saleDataId = uuidv4();
-
-  await bigquery.query({
-    query: `DELETE FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHSalesData\`
-            WHERE Bill_Number = @billNumber AND Date = @date`,
-    params: { billNumber: data.billNumber, date: data.date }
-  });
-
-  const salesRows = [];
-  data.items.forEach(item => {
-    if (item.item && item.amount) {
-      salesRows.push({
-        SaleData_ID: saleDataId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
-        Mobile_Number: data.mobileNumber || null,
-        Item: item.item,
-        Amount: parseFloat(item.amount) || null,
-        RMD_CSTM: item.rmdCstm || null,
-        Paymode: null,
-        Amount_Received: null,
-        Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date: data.deliveryDate || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
-
-  data.payments.forEach(payment => {
-    if (payment.paymode && payment.amountReceived) {
-      salesRows.push({
-        SaleData_ID: saleDataId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
-        Mobile_Number: data.mobileNumber || null,
-        Item: null,
-        Amount: null,
-        RMD_CSTM: null,
-        Paymode: payment.paymode,
-        Amount_Received: parseFloat(payment.amountReceived) || null,
-        Balance_Due: parseFloat(data.balanceDue) || null,
-        Delivery_Date: data.deliveryDate || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
-
-  await bigquery.dataset(datasetId).table(salesTableId).insert(salesRows);
-  return salesRows.length;
-}
-
-async function updateDueBalanceData(data, email) {
-  const datasetId = 'my_database';
-  const balanceDueTableId = 'SYJPMOPMHBalanceDue';
-  const timestamp = BigQuery.timestamp(new Date());
-  const balanceDueId = uuidv4();
-
-  await bigquery.query({
-    query: `DELETE FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHBalanceDue\`
-            WHERE Bill_Number = @billNumber AND Date = @date`,
-    params: { billNumber: data.billNumber, date: data.date }
-  });
-
-  const dueBalanceRows = [];
-  data.dueBalanceRows.forEach(row => {
-    if (row.dueBalanceReceived || row.dueBalanceBillNumber) {
-      dueBalanceRows.push({
-        BalanceDue_ID: balanceDueId,
-        Date: data.date,
-        Bill_Number: data.billNumber,
-        Salesman: data.salesman,
-        Shop_Name: data.shopName,
-        Department: data.department,
-        Mobile_Number: data.mobileNumber || null,
-        Due_Balance_Received: row.dueBalanceReceived || null, // Keep as STRING
-        Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
-        Timestamp: timestamp,
-        Email_ID: email
-      });
-    }
-  });
-
-  await bigquery.dataset(datasetId).table(balanceDueTableId).insert(dueBalanceRows);
-  return dueBalanceRows.length;
-}
-
-async function checkDuplicateBillNumber(billNumber, date) {
-  const query = `
-    SELECT COUNT(*) as count
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHBillNumbers\`
-    WHERE Bill_Number = @billNumber AND Date = @date
-  `;
-  const options = {
-    query,
-    params: { billNumber, date }
-  };
-  const [rows] = await bigquery.query(options);
-  return rows[0].count > 0;
-}
-
-async function getNames() {
-  const queries = {
-    salesmen: 'SELECT DISTINCT Salesman FROM `myposdata.my_database.SalesData` WHERE Salesman IS NOT NULL',
-    shopNames: 'SELECT shop_name AS Shop_Name FROM `myposdata.my_database.SalesShopName`',
-    departments: 'SELECT department AS Department FROM `myposdata.my_database.SalesDepartment`',
-    items: 'SELECT Item FROM `myposdata.my_database.Items`',
-    rmdCstms: 'SELECT rmd_cstm AS RMD_CSTM FROM `myposdata.my_database.SalesRmdCstm`',
-    paymodes: 'SELECT Paymode FROM `myposdata.my_database.Paymode`'
-  };
-  const results = {};
-  for (const [key, query] of Object.entries(queries)) {
-    const [rows] = await bigquery.query(query);
-    results[key] = rows.map(row => Object.values(row)[0]);
+    return { insertedRows: rows.length };
+  } catch (error) {
+    console.error('InsertSalesData Error:', error.message, error.stack);
+    throw error;
   }
-  return results;
+}
+
+async function insertDueBalanceData(data, userEmail) {
+  try {
+    const tableId = 'SYJPMOPMHBalanceDue';
+    const rows = (data.dueBalanceRows || []).map(row => ({
+      Date: data.date || null,
+      Bill_Number: data.billNumber || null,
+      Salesman: data.salesman || null,
+      Shop_Name: data.shopName || null,
+      Department: data.department || null,
+      Mobile_Number: data.mobileNumber || null,
+      Due_Balance_Received: parseFloat(row.dueBalanceReceived) || null,
+      Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
+      Email_ID: userEmail,
+      Timestamp: BigQuery.timestamp(new Date()),
+    }));
+
+    if (rows.length === 0) throw new Error('No rows to insert');
+
+    await bigquery.dataset(datasetId).table(tableId).insert(rows);
+
+    await bigquery.dataset(datasetId).table('SYJPMOPMHBillNumbers').insert({
+      Date: data.date || null,
+      Bill_Number: data.billNumber || null,
+      Email_ID: userEmail,
+      Timestamp: BigQuery.timestamp(new Date()),
+    });
+
+    return { insertedRows: rows.length };
+  } catch (error) {
+    console.error('InsertDueBalanceData Error:', error.message, error.stack);
+    throw error;
+  }
 }
 
 async function getRecentSales() {
-  const query = `
-    SELECT DISTINCT Date, Bill_Number
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHSalesData\`
-    ORDER BY Date DESC
-    LIMIT 10
-  `;
-  const [rows] = await bigquery.query(query);
-  return rows;
+  try {
+    const query = `
+      SELECT DISTINCT Date, Bill_Number
+      FROM \`${config.projectId}.${datasetId}.SYJPMOPMHSalesData\`
+      WHERE Email_ID = 'reachadeel@gmail.com'
+      ORDER BY Timestamp DESC
+      LIMIT 10
+    `;
+    const [rows] = await bigquery.query(query);
+    return rows;
+  } catch (error) {
+    console.error('GetRecentSales Error:', error.message, error.stack);
+    throw error;
+  }
 }
 
 async function getRecentDueBalances() {
-  const query = `
-    SELECT DISTINCT Date, Bill_Number
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHBalanceDue\`
-    ORDER BY Date DESC
-    LIMIT 10
-  `;
-  const [rows] = await bigquery.query(options);
-  return rows;
+  try {
+    const query = `
+      SELECT DISTINCT Date, Bill_Number
+      FROM \`${config.projectId}.${datasetId}.SYJPMOPMHBalanceDue\`
+      WHERE Email_ID = 'reachadeel@gmail.com'
+      ORDER BY Timestamp DESC
+      LIMIT 10
+    `;
+    const [rows] = await bigquery.query(query);
+    return rows;
+  } catch (error) {
+    console.error('GetRecentDueBalances Error:', error.message, error.stack);
+    throw error;
+  }
+}
+
+async function getNames() {
+  try {
+    const salesmenQuery = `SELECT DISTINCT Salesman FROM \`${config.projectId}.${datasetId}.SalesData\` WHERE Salesman IS NOT NULL ORDER BY Salesman`;
+    const shopNamesQuery = `SELECT DISTINCT shop_name FROM \`${config.projectId}.${datasetId}.SalesShopName\` WHERE shop_name IS NOT NULL ORDER BY shop_name`;
+    const departmentsQuery = `SELECT DISTINCT department FROM \`${config.projectId}.${datasetId}.SalesDepartment\` WHERE department IS NOT NULL ORDER BY department`;
+    const itemsQuery = `SELECT DISTINCT Item FROM \`${config.projectId}.${datasetId}.Items\` WHERE Item IS NOT NULL ORDER BY Item`;
+    const rmdCstmsQuery = `SELECT DISTINCT rmd_cstm FROM \`${config.projectId}.${datasetId}.SalesRmdCstm\` WHERE rmd_cstm IS NOT NULL ORDER BY rmd_cstm`;
+    const paymodesQuery = `SELECT DISTINCT Paymode FROM \`${config.projectId}.${datasetId}.Paymode\` WHERE Paymode IS NOT NULL ORDER BY Paymode`;
+
+    const [[salesmen], [shopNames], [departments], [items], [rmdCstms], [paymodes]] = await Promise.all([
+      bigquery.query(salesmenQuery),
+      bigquery.query(shopNamesQuery),
+      bigquery.query(departmentsQuery),
+      bigquery.query(itemsQuery),
+      bigquery.query(rmdCstmsQuery),
+      bigquery.query(paymodesQuery),
+    ]);
+
+    return {
+      salesmen: salesmen.map(row => row.Salesman),
+      shopNames: shopNames.map(row => row.shop_name),
+      departments: departments.map(row => row.department),
+      items: items.map(row => row.Item),
+      rmdCstms: rmdCstms.map(row => row.rmd_cstm),
+      paymodes: paymodes.map(row => row.Paymode),
+    };
+  } catch (error) {
+    console.error('GetNames Error:', error.message, error.stack);
+    throw error;
+  }
+}
+
+async function updateSalesData(data, userEmail) {
+  try {
+    const tableId = 'SYJPMOPMHSalesData';
+    const deleteQuery = `
+      DELETE FROM \`${config.projectId}.${datasetId}.${tableId}\`
+      WHERE Bill_Number = @billNumber AND Date = @date AND Email_ID = @userEmail
+    `;
+    await bigquery.query({
+      query: deleteQuery,
+      params: { billNumber: data.billNumber, date: data.date, userEmail },
+    });
+
+    const rows = data.items.flatMap(item => {
+      const baseRow = {
+        Date: data.date || null,
+        Bill_Number: data.billNumber || null,
+        Salesman: data.salesman || null,
+        Shop_Name: data.shopName || null,
+        Department: data.department || null,
+        Mobile_Number: data.mobileNumber || null,
+        Balance_Due: parseFloat(data.balanceDue) || null,
+        Delivery_Date: data.deliveryDate || null,
+        Email_ID: userEmail,
+        Timestamp: BigQuery.timestamp(new Date()),
+      };
+      return (data.payments || []).map(payment => ({
+        ...baseRow,
+        Item: item.item || null,
+        Amount: parseFloat(item.amount) || null,
+        RMD_CSTM: item.rmdCstm || null,
+        Paymode: payment.paymode || null,
+        Amount_Received: parseFloat(payment.amountReceived) || null,
+      }));
+    });
+
+    if (rows.length === 0) throw new Error('No rows to insert');
+
+    await bigquery.dataset(datasetId).table(tableId).insert(rows);
+    return { updatedRows: rows.length };
+  } catch (error) {
+    console.error('UpdateSalesData Error:', error.message, error.stack);
+    throw error;
+  }
+}
+
+async function updateDueBalanceData(data, userEmail) {
+  try {
+    const tableId = 'SYJPMOPMHBalanceDue';
+    const deleteQuery = `
+      DELETE FROM \`${config.projectId}.${datasetId}.${tableId}\`
+      WHERE Bill_Number = @billNumber AND Date = @date AND Email_ID = @userEmail
+    `;
+    await bigquery.query({
+      query: deleteQuery,
+      params: { billNumber: data.billNumber, date: data.date, userEmail },
+    });
+
+    const rows = (data.dueBalanceRows || []).map(row => ({
+      Date: data.date || null,
+      Bill_Number: data.billNumber || null,
+      Salesman: data.salesman || null,
+      Shop_Name: data.shopName || null,
+      Department: data.department || null,
+      Mobile_Number: data.mobileNumber || null,
+      Due_Balance_Received: parseFloat(row.dueBalanceReceived) || null,
+      Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
+      Email_ID: userEmail,
+      Timestamp: BigQuery.timestamp(new Date()),
+    }));
+
+    if (rows.length === 0) throw new Error('No rows to insert');
+
+    await bigquery.dataset(datasetId).table(tableId).insert(rows);
+    return { updatedRows: rows.length };
+  } catch (error) {
+    console.error('UpdateDueBalanceData Error:', error.message, error.stack);
+    throw error;
+  }
 }
 
 async function getSalesData(billNumber, date) {
-  const query = `
-    SELECT *
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHSalesData\`
-    WHERE Bill_Number = @billNumber AND Date = @date
-  `;
-  const options = {
-    query,
-    params: { billNumber, date }
-  };
-  const [rows] = await bigquery.query(options);
-  return { salesData: rows };
+  try {
+    const query = `
+      SELECT *
+      FROM \`${config.projectId}.${datasetId}.SYJPMOPMHSalesData\`
+      WHERE Bill_Number = @billNumber AND Date = @date AND Email_ID = 'reachadeel@gmail.com'
+    `;
+    const [rows] = await bigquery.query({
+      query,
+      params: { billNumber, date },
+    });
+    return rows;
+  } catch (error) {
+    console.error('GetSalesData Error:', error.message, error.stack);
+    throw error;
+  }
 }
 
 async function getDueBalanceData(billNumber, date) {
-  const query = `
-    SELECT *
-    FROM \`${process.env.GOOGLE_CLOUD_PROJECT}.my_database.SYJPMOPMHBalanceDue\`
-    WHERE Bill_Number = @billNumber AND Date = @date
-  `;
-  const options = {
-    query,
-    params: { billNumber, date }
-  };
-  const [rows] = await bigquery.query(options);
-  return { dueBalanceData: rows };
+  try {
+    const query = `
+      SELECT *
+      FROM \`${config.projectId}.${datasetId}.SYJPMOPMHBalanceDue\`
+      WHERE Bill_Number = @billNumber AND Date = @date AND Email_ID = 'reachadeel@gmail.com'
+    `;
+    const [rows] = await bigquery.query({
+      query,
+      params: { billNumber, date },
+    });
+    return rows;
+  } catch (error) {
+    console.error('GetDueBalanceData Error:', error.message, error.stack);
+    throw error;
+  }
+}
+
+async function checkDuplicateBillNumber(billNumber, date) {
+  try {
+    const query = `
+      SELECT COUNT(*) as count
+      FROM \`${config.projectId}.${datasetId}.SYJPMOPMHBillNumbers\`
+      WHERE Bill_Number = @billNumber AND Date = @date AND Email_ID = 'reachadeel@gmail.com'
+    `;
+    const [rows] = await bigquery.query({
+      query,
+      params: { billNumber, date },
+    });
+    return rows[0].count > 0;
+  } catch (error) {
+    console.error('CheckDuplicateBillNumber Error:', error.message, error.stack);
+    throw error;
+  }
 }
 
 module.exports = {
   insertSalesData,
   insertDueBalanceData,
-  checkDuplicateBillNumber,
-  getNames,
   getRecentSales,
   getRecentDueBalances,
+  getNames,
+  updateSalesData,
+  updateDueBalanceData,
   getSalesData,
   getDueBalanceData,
-  updateSalesData,
-  updateDueBalanceData
+  checkDuplicateBillNumber,
 };
