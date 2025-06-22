@@ -1,3 +1,13 @@
 module.exports = {
-  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'sy-jpm-pos-web',
+  projectId: 'myposdata',
+  datasetId: 'my_database',
+  salesTableId: 'SYJPMOPMHSalesData',
+  dueBalanceTableId: 'SYJPMOPMHBalanceDue',
+  billNumbersTableId: 'SYJPMOPMHBillNumbers',
+  salesDataTableId: 'SalesData',
+  shopNameTableId: 'SalesShopName',
+  departmentTableId: 'SalesDepartment',
+  itemsTableId: 'Items',
+  rmdCstmTableId: 'SalesRmdCstm',
+  paymodeTableId: 'Paymode',
 };
