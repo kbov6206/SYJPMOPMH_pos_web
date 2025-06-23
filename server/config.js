@@ -1,13 +1,13 @@
 module.exports = {
-  projectId: 'myposdata',
+  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'myposdata',
   datasetId: 'my_database',
   salesTableId: 'SYJPMOPMHSalesData',
   dueBalanceTableId: 'SYJPMOPMHBalanceDue',
   billNumbersTableId: 'SYJPMOPMHBillNumbers',
-  salesDataTableId: 'SalesData',
+  paymentTableId: 'SYJPMOPMHPaymentData',
+  namesForSaleTableId: 'NamesForSale',
   shopNameTableId: 'SalesShopName',
-  departmentTableId: 'SalesDepartment',
   itemsTableId: 'Items',
-  rmdCstmTableId: 'SalesRmdCstm',
   paymodeTableId: 'Paymode',
+  rmdCstmTableId: 'SalesRmdCstm',
 };
