@@ -1,1106 +1,1193 @@
 <!DOCTYPE html>
-   <html lang="en">
-   <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>SYJPMOPMH POS Web</title>
-     <link rel="stylesheet" href="tailwind.css">
-     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-     <script src="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-     <link rel="stylesheet" href="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.css">
-     <link rel="stylesheet" href="styles.css">
-   </head>
-   <body>
-     <div id="root"></div>
-     <script>
-       const { createRoot } = ReactDOM;
-       const API_URL = 'https://sy-jpm-pos-web-uc.a.run.app';
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYJPMOPMH POS Web</title>
+  <link rel="stylesheet" href="tailwind.css">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { createRoot } = ReactDOM;
+    const API_URL = 'https://sy-jpm-pos-web-385936458000.us-central1.run.app';
 
-       function showNotification(message, type = 'info') {
-         const notification = document.createElement('div');
-         notification.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'info' ? 'bg-green-600' : 'bg-red-600'}`;
-         notification.textContent = message;
-         document.body.appendChild(notification);
-         setTimeout(() => notification.remove(), 3000);
-       }
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'info' ? 'bg-green-600' : 'bg-red-600'}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    }
 
-       function showLoadingOverlay(message = 'Loading...') {
-         let overlay = document.getElementById('loadingOverlay');
-         if (!overlay) {
-           overlay = document.createElement('div');
-           overlay.id = 'loadingOverlay';
-           overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50';
-           overlay.innerHTML = `
-             <div class="animate-spin border-4 border-t-white border-gray-300 rounded-full w-10 h-10"></div>
-             <p class="text-white mt-4" id="loadingMessage">${message}</p>
-           `;
-           document.body.appendChild(overlay);
-         } else {
-           document.getElementById('loadingMessage').textContent = message;
-           overlay.style.display = 'flex';
-         }
-         document.body.style.overflow = 'hidden';
-       }
+    function showLoadingOverlay(message = 'Loading...') {
+      let overlay = document.getElementById('loadingOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50';
+        overlay.innerHTML = `
+          <div class="animate-spin border-4 border-t-white border-gray-300 rounded-full w-10 h-10"></div>
+          <p class="text-white mt-4" id="loadingMessage">${message}</p>
+        `;
+        document.body.appendChild(overlay);
+      } else {
+        document.getElementById('loadingMessage').textContent = message;
+        overlay.style.display = 'flex';
+      }
+      document.body.style.overflow = 'hidden';
+    }
 
-       function hideLoadingOverlay() {
-         const overlay = document.getElementById('loadingOverlay');
-         if (overlay) {
-           overlay.style.display = 'none';
-           document.body.style.overflow = 'auto';
-         }
-       }
+    function hideLoadingOverlay() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    }
 
-       const App = () => {
-         const [activeModule, setActiveModule] = React.useState('sales');
+    const App = () => {
+      const [activeModule, setActiveModule] = React.useState('sales');
 
-         return React.createElement(
-           'div',
-           { className: 'container mx-auto p-4' },
-           React.createElement(
-             'div',
-             { className: 'flex justify-center space-x-4 mb-6' },
-             React.createElement(
-               'button',
-               {
-                 onClick: () => setActiveModule('sales'),
-                 className: `px-4 py-2 rounded ${activeModule === 'sales' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`,
-               },
-               'Sales'
-             ),
-             React.createElement(
-               'button',
-               {
-                 onClick: () => setActiveModule('dueBalance'),
-                 className: `px-4 py-2 rounded ${activeModule === 'dueBalance' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`,
-               },
-               'Due Balance'
-             )
-           ),
-           activeModule === 'sales' ? React.createElement(SalesForm) : React.createElement(BalanceDueForm)
-         );
-       };
+      return React.createElement(
+        'div',
+        { className: 'container mx-auto p-4' },
+        React.createElement(
+          'div',
+          { className: 'flex justify-center space-x-4 mb-6' },
+          React.createElement(
+            'button',
+            {
+              onClick: () => setActiveModule('sales'),
+              className: `px-4 py-2 rounded ${activeModule === 'sales' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`,
+            },
+            'Sales'
+          ),
+          React.createElement(
+            'button',
+            {
+              onClick: () => setActiveModule('dueBalance'),
+              className: `px-4 py-2 rounded ${activeModule === 'dueBalance' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`,
+            },
+            'Due Balance'
+          )
+        ),
+        activeModule === 'sales' ? React.createElement(SalesForm) : React.createElement(BalanceDueForm)
+      );
+    };
 
-       const SalesForm = () => {
-         const [formData, setFormData] = React.useState({
-           date: new Date().toISOString().split('T')[0],
-           billNumber: '',
-           salesman: '',
-           shopName: '',
-           department: '',
-           mobileNumber: '',
-           items: [{ item: '', amount: '', rmdCstm: '' }],
-           payments: [{ paymode: '', amountReceived: '' }],
-           balanceDue: '',
-           deliveryDate: '',
-         });
-         const [isEditMode, setIsEditMode] = React.useState(false);
-         const [salesmen, setSalesmen] = React.useState([]);
-         const [shopNames, setShopNames] = React.useState([]);
-         const [departments, setDepartments] = React.useState([]);
-         const [items, setItems] = React.useState([]);
-         const [rmdCstms, setRmdCstms] = React.useState([]);
-         const [paymodes, setPaymodes] = React.useState([]);
-         const [recentSales, setRecentSales] = React.useState([]);
-         const [printPreview, setPrintPreview] = React.useState(null);
-         const dateRef = React.useRef(null);
-         const deliveryDateRef = React.useRef(null);
+    const SalesForm = () => {
+      const [formData, setFormData] = React.useState({
+        date: new Date().toISOString().split('T')[0],
+        billNumber: '',
+        salesman: '',
+        shopName: '',
+        mobileNumber: '',
+        emailId: '',
+        items: [{ item: '', amount: '', rmdCstm: '' }],
+        payments: [{ paymode: '', amountReceived: '' }],
+        balanceDue: '',
+        deliveryDate: '',
+      });
+      const [isEditMode, setIsEditMode] = React.useState(false);
+      const [salesmen, setSalesmen] = React.useState([]);
+      const [shopNames, setShopNames] = React.useState([]);
+      const [items, setItems] = React.useState([]);
+      const [rmdCstms, setRmdCstms] = React.useState([]);
+      const [paymodes, setPaymodes] = React.useState([]);
+      const [recentSales, setRecentSales] = React.useState([]);
+      const [printPreview, setPrintPreview] = React.useState(null);
+      const dateRef = React.useRef(null);
+      const deliveryDateRef = React.useRef(null);
 
-         React.useEffect(() => {
-           flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
-           flatpickr(deliveryDateRef.current, { dateFormat: 'Y-m-d' });
-           fetchNames();
-           fetchRecentSales();
-         }, []);
+      React.useEffect(() => {
+        flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
+        flatpickr(deliveryDateRef.current, { dateFormat: 'Y-m-d' });
+        fetchNames();
+        fetchRecentSales();
+      }, []);
 
-         const fetchNames = async () => {
-           try {
-             const response = await fetch(`${API_URL}/api/names`);
-             const data = await response.json();
-             setSalesmen(data.salesmen || []);
-             setShopNames(data.shopNames || []);
-             setDepartments(data.departments || []);
-             setItems(data.items || []);
-             setRmdCstms(data.rmdCstms || []);
-             setPaymodes(data.paymodes || []);
-           } catch (error) {
-             showNotification('Failed to load form options.', 'error');
-           }
-         };
+      const fetchNames = async () => {
+        try {
+          const [salesmenRes, shopNamesRes, itemsRes, paymodesRes, rmdCstmsRes] = await Promise.all([
+            fetch(`${API_URL}/api/salesmen`),
+            fetch(`${API_URL}/api/shop-names`),
+            fetch(`${API_URL}/api/items`),
+            fetch(`${API_URL}/api/paymodes`),
+            fetch(`${API_URL}/api/rmd-cstm`),
+          ]);
+          const [salesmenData, shopNamesData, itemsData, paymodesData, rmdCstmsData] = await Promise.all([
+            salesmenRes.json(),
+            shopNamesRes.json(),
+            itemsRes.json(),
+            paymodesRes.json(),
+            rmdCstmsRes.json(),
+          ]);
+          setSalesmen(salesmenData || []);
+          setShopNames(shopNamesData || []);
+          setItems(itemsData || []);
+          setPaymodes(paymodesData || []);
+          setRmdCstms(rmdCstmsData || []);
+        } catch (error) {
+          showNotification('Failed to load form options.', 'error');
+        }
+      };
 
-         const fetchRecentSales = async () => {
-           try {
-             const response = await fetch(`${API_URL}/api/recent-sales`);
-             const sales = await response.json();
-             setRecentSales(sales);
-           } catch (error) {
-             showNotification('Failed to load recent sales.', 'error');
-           }
-         };
+      const fetchRecentSales = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/recent-sales`);
+          const sales = await response.json();
+          setRecentSales(sales);
+        } catch (error) {
+          showNotification('Failed to load recent sales.', 'error');
+        }
+      };
 
-         const fetchSalesForEdit = async (billNumber, date) => {
-           showLoadingOverlay('Loading sales data...');
-           try {
-             const response = await fetch(`${API_URL}/api/sales?billNumber=${billNumber}&date=${date}`);
-             const data = await response.json();
-             if (!data.salesData || data.salesData.length === 0) {
-               showNotification('No data found.', 'error');
-               resetForm();
-               return;
-             }
-             const salesData = data.salesData[0];
-             setFormData({
-               date: salesData.Date,
-               billNumber: salesData.Bill_Number,
-               salesman: salesData.Salesman,
-               shopName: salesData.Shop_Name,
-               department: salesData.Department,
-               mobileNumber: salesData.Mobile_Number || '',
-               items: data.salesData
-                 .filter(row => row.Item)
-                 .map(row => ({
-                   item: row.Item,
-                   amount: row.Amount,
-                   rmdCstm: row.RMD_CSTM,
-                 })),
-               payments: data.salesData
-                 .filter(row => row.Paymode)
-                 .map(row => ({
-                   paymode: row.Paymode,
-                   amountReceived: row.Amount_Received,
-                 })),
-               balanceDue: salesData.Balance_Due || '',
-               deliveryDate: salesData.Delivery_Date || '',
-             });
-             setIsEditMode(true);
-           } catch (error) {
-             showNotification('Failed to load sales data.', 'error');
-             resetForm();
-           } finally {
-             hideLoadingOverlay();
-           }
-         };
+      const fetchSalesForEdit = async (billNumber, date) => {
+        showLoadingOverlay('Loading sales data...');
+        try {
+          const response = await fetch(`${API_URL}/api/sales?billNumber=${billNumber}&date=${date}`);
+          const data = await response.json();
+          if (!data.salesData || data.salesData.length === 0) {
+            showNotification('No data found.', 'error');
+            resetForm();
+            return;
+          }
+          const salesData = data.salesData[0];
+          setFormData({
+            date: salesData.Date,
+            billNumber: salesData.Bill_Number,
+            salesman: salesData.Salesman,
+            shopName: salesData.Shop_Name,
+            mobileNumber: salesData.Mobile_Number || '',
+            emailId: salesData.Email_ID || '',
+            items: data.salesData
+              .filter(row => row.Item)
+              .map(row => ({
+                item: row.Item,
+                amount: row.Amount,
+                rmdCstm: row.RMD_CSTM,
+              })),
+            payments: data.salesData
+              .filter(row => row.Paymode)
+              .map(row => ({
+                paymode: row.Paymode,
+                amountReceived: row.Amount_Received,
+              })),
+            balanceDue: salesData.Balance_Due || '',
+            deliveryDate: salesData.Delivery_Date || '',
+          });
+          setIsEditMode(true);
+        } catch (error) {
+          showNotification('Failed to load sales data.', 'error');
+          resetForm();
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
 
-         const fetchPrintPreview = async () => {
-           const keyword = document.getElementById('salesKeyword').value;
-           const date = formData.date;
-           if (!keyword || !date) {
-             showNotification('Enter bill number and date.', 'error');
-             return;
-           }
-           try {
-             const response = await fetch(`${API_URL}/api/sales?billNumber=${keyword}&date=${date}`);
-             const data = await response.json();
-             if (!data.salesData || data.salesData.length === 0) {
-               showNotification('No data found.', 'error');
-               setPrintPreview(null);
-               return;
-             }
-             setPrintPreview(data);
-           } catch (error) {
-             showNotification('Failed to load print preview.', 'error');
-           }
-         };
+      const fetchPrintPreview = async () => {
+        const keyword = document.getElementById('salesKeyword').value;
+        const date = formData.date;
+        if (!keyword || !date) {
+          showNotification('Enter bill number and date.', 'error');
+          return;
+        }
+        try {
+          const response = await fetch(`${API_URL}/api/sales?billNumber=${keyword}&date=${date}`);
+          const data = await response.json();
+          if (!data.salesData || data.salesData.length === 0) {
+            showNotification('No data found.', 'error');
+            setPrintPreview(null);
+            return;
+          }
+          setPrintPreview(data);
+        } catch (error) {
+          showNotification('Failed to load print preview.', 'error');
+        }
+      };
 
-         const handlePrint = () => {
-           if (!printPreview) return;
-           const printWindow = window.open('', '_blank');
-           printWindow.document.write(`
-             <html>
-               <head>
-                 <style>
-                   body { font-family: Arial; font-size: 10pt; margin: 5mm; }
-                   h3 { font-size: 12pt; text-align: center; }
-                   table { width: 100%; border-collapse: collapse; }
-                   th, td { border-bottom: 1px dotted #000; padding: 2mm; }
-                   .header-row { display: flex; justify-content: space-between; }
-                 </style>
-               </head>
-               <body>
-                 <h3>Sales Receipt</h3>
-                 <div class="header-row">
-                   <p>Bill Number: ${printPreview.salesData[0].Bill_Number}</p>
-                   <p>Date: ${printPreview.salesData[0].Date}</p>
-                 </div>
-                 <p>Salesman: ${printPreview.salesData[0].Salesman}</p>
-                 <p>Shop Name: ${printPreview.salesData[0].Shop_Name}</p>
-                 <p>Department: ${printPreview.salesData[0].Department}</p>
-                 <p>Mobile Number: ${printPreview.salesData[0].Mobile_Number || '-'}</p>
-                 <table>
-                   <tr><th>Item</th><th>Amount</th><th>RMD/CSTM</th></tr>
-                   ${printPreview.salesData
-                     .filter(row => row.Item)
-                     .map(row => `<tr><td>${row.Item}</td><td>${row.Amount}</td><td>${row.RMD_CSTM}</td></tr>`)
-                     .join('')}
-                 </table>
-                 <p>Balance Due: ${printPreview.salesData[0].Balance_Due || 0}</p>
-                 <p>Delivery Date: ${printPreview.salesData[0].Delivery_Date || '-'}</p>
-                 <div>
-                   ${printPreview.salesData
-                     .filter(row => row.Paymode)
-                     .map(row => `<p>${row.Paymode}: ${row.Amount_Received}</p>`)
-                     .join('')}
-                 </div>
-                 <p>Total Amount Received: ${printPreview.salesData
-                   .filter(row => row.Paymode)
-                   .reduce((sum, row) => sum + Number(row.Amount_Received), 0)}</p>
-               </body>
-             </html>
-           `);
-           printWindow.document.close();
-           printWindow.print();
-         };
+      const handlePrint = () => {
+        if (!printPreview) return;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial; font-size: 10pt; margin: 5mm; }
+                h3 { font-size: 12pt; text-align: center; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border-bottom: 1px dotted #000; padding: 2mm; }
+                .header-row { display: flex; justify-content: space-between; }
+              </style>
+            </head>
+            <body>
+              <h3>Sales Receipt</h3>
+              <div class="header-row">
+                <p>Bill Number: ${printPreview.salesData[0].Bill_Number}</p>
+                <p>Date: ${printPreview.salesData[0].Date}</p>
+              </div>
+              <p>Salesman: ${printPreview.salesData[0].Salesman}</p>
+              <p>Shop Name: ${printPreview.salesData[0].Shop_Name}</p>
+              <p>Department: SYJ-Gents</p>
+              <p>Mobile Number: ${printPreview.salesData[0].Mobile_Number || '-'}</p>
+              <table>
+                <tr><th>Item</th><th>Amount</th><th>RMD/CSTM</th></tr>
+                ${printPreview.salesData
+                  .filter(row => row.Item)
+                  .map(row => `<tr><td>${row.Item}</td><td>${row.Amount}</td><td>${row.RMD_CSTM}</td></tr>`)
+                  .join('')}
+              </table>
+              <p>Balance Due: ${printPreview.salesData[0].Balance_Due || 0}</p>
+              <p>Delivery Date: ${printPreview.salesData[0].Delivery_Date || '-'}</p>
+              <div>
+                ${printPreview.salesData
+                  .filter(row => row.Paymode)
+                  .map(row => `<p>${row.Paymode}: ${row.Amount_Received}</p>`)
+                  .join('')}
+              </div>
+              <p>Total Amount Received: ${printPreview.salesData
+                .filter(row => row.Paymode)
+                .reduce((sum, row) => sum + Number(row.Amount_Received), 0)}</p>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      };
 
-         const addItemRow = () => setFormData({
-           ...formData,
-           items: [...formData.items, { item: '', amount: '', rmdCstm: '' }],
-         });
-         const addPaymentRow = () => setFormData({
-           ...formData,
-           payments: [...formData.payments, { paymode: '', amountReceived: '' }],
-         });
-         const removeItemRow = index => setFormData({
-           ...formData,
-           items: formData.items.filter((_, i) => i !== index),
-         });
-         const removePaymentRow = index => setFormData({
-           ...formData,
-           payments: formData.payments.filter((_, i) => i !== index),
-         });
+      const addItemRow = () => setFormData({
+        ...formData,
+        items: [...formData.items, { item: '', amount: '', rmdCstm: '' }],
+      });
+      const addPaymentRow = () => setFormData({
+        ...formData,
+        payments: [...formData.payments, { paymode: '', amountReceived: '' }],
+      });
+      const removeItemRow = index => setFormData({
+        ...formData,
+        items: formData.items.filter((_, i) => i !== index),
+      });
+      const removePaymentRow = index => setFormData({
+        ...formData,
+        payments: formData.payments.filter((_, i) => i !== index),
+      });
 
-         const updateTotal = () => {
-           const totalItems = formData.items.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
-           const balanceDue = Number(formData.balanceDue || 0);
-           const totalReceived = formData.payments.reduce((sum, row) => sum + (Number(row.amountReceived) || 0), 0);
-           return { totalAmount: totalItems - balanceDue, totalReceived };
-         };
+      const updateTotal = () => {
+        const totalItems = formData.items.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+        const balanceDue = Number(formData.balanceDue || 0);
+        const totalReceived = formData.payments.reduce((sum, row) => sum + (Number(row.amountReceived) || 0), 0);
+        return { totalAmount: totalItems - balanceDue, totalReceived };
+      };
 
-         const isItemRowFilled = row => row.item && row.amount && row.rmdCstm;
-         const isPaymentRowFilled = row => row.paymode && row.amountReceived;
-         const isValidCombination = () => {
-           const itemRowsFilled = formData.items.some(isItemRowFilled);
-           const paymentRowsFilled = formData.payments.some(isPaymentRowFilled);
-           const balanceDueFilled = formData.balanceDue && formData.balanceDue !== '';
-           return (itemRowsFilled && paymentRowsFilled) || balanceDueFilled;
-         };
+      const isItemRowFilled = row => row.item && row.amount && row.rmdCstm;
+      const isPaymentRowFilled = row => row.paymode && row.amountReceived;
+      const isValidCombination = () => {
+        const itemRowsFilled = formData.items.some(isItemRowFilled);
+        const paymentRowsFilled = formData.payments.some(isPaymentRowFilled);
+        const balanceDueFilled = formData.balanceDue && formData.balanceDue !== '';
+        return (itemRowsFilled && paymentRowsFilled) || balanceDueFilled;
+      };
 
-         const checkBillNumberDuplicate = async () => {
-           if (isEditMode) return false;
-           try {
-             const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
-             const data = await response.json();
-             return data.isDuplicate;
-           } catch (error) {
-             showNotification('Error checking duplicate bill number.', 'error');
-             return true;
-           }
-         };
+      const checkBillNumberDuplicate = async () => {
+        if (isEditMode) return false;
+        try {
+          const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
+          const data = await response.json();
+          return data.isDuplicate;
+        } catch (error) {
+          showNotification('Error checking duplicate bill number.', 'error');
+          return true;
+        }
+      };
 
-         const handleSubmit = async e => {
-           e.preventDefault();
-           if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.department) {
-             showNotification('Please fill all required fields.', 'error');
-             return;
-           }
-           const isDuplicate = await checkBillNumberDuplicate();
-           if (isDuplicate) {
-             showNotification('Bill number and date already exist.', 'error');
-             return;
-           }
-           if (!isValidCombination()) {
-             showNotification('Please fill at least one item row and one payment row, or include balance due.', 'error');
-             return;
-           }
-           const { totalAmount, totalReceived } = updateTotal();
-           if (totalReceived !== totalAmount) {
-             showNotification('Total amount received and total amount must match.', 'error');
-             return;
-           }
-           showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
-           try {
-             const response = await fetch(`${API_URL}/api/sales${isEditMode ? '/update' : ''}`, {
-               method: isEditMode ? 'PUT' : 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify(formData),
-             });
-             const result = await response.json();
-             showNotification(`Success: ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
-             resetForm();
-             fetchRecentSales();
-           } catch (error) {
-             showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
-           } finally {
-             hideLoadingOverlay();
-           }
-         };
+      const handleSubmit = async e => {
+        e.preventDefault();
+        if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.emailId) {
+          showNotification('Please fill all required fields.', 'error');
+          return;
+        }
+        const isDuplicate = await checkBillNumberDuplicate();
+        if (isDuplicate) {
+          showNotification('Bill number and date already exist.', 'error');
+          return;
+        }
+        if (!isValidCombination()) {
+          showNotification('Please fill at least one item row and one payment row, or include balance due.', 'error');
+          return;
+        }
+        const { totalAmount, totalReceived } = updateTotal();
+        if (totalReceived !== totalAmount) {
+          showNotification('Total amount received and total amount must match.', 'error');
+          return;
+        }
+        showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
+        try {
+          const salesData = formData.items.map(item => ({
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Salesman: formData.salesman,
+            Shop_Name: formData.shopName,
+            Email_ID: formData.emailId,
+            Mobile_Number: formData.mobileNumber || null,
+            Item: item.item || null,
+            Amount: item.amount || null,
+            RMD_CSTM: item.rmdCstm || null,
+            Paymode: null,
+            Amount_Received: null,
+            Balance_Due: formData.balanceDue || null,
+            Delivery_Date: formData.deliveryDate || null,
+          })).concat(formData.payments.map(payment => ({
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Salesman: formData.salesman,
+            Shop_Name: formData.shopName,
+            Email_ID: formData.emailId,
+            Mobile_Number: formData.mobileNumber || null,
+            Item: null,
+            Amount: null,
+            RMD_CSTM: null,
+            Paymode: payment.paymode || null,
+            Amount_Received: payment.amountReceived || null,
+            Balance_Due: formData.balanceDue || null,
+            Delivery_Date: formData.deliveryDate || null,
+          })));
+          const balanceDueData = [{
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Salesman: formData.salesman,
+            Shop_Name: formData.shopName,
+            Email_ID: formData.emailId,
+            Mobile_Number: formData.mobileNumber || null,
+            Due_Balance_Received: null,
+            Due_Balance_Bill_Number: null,
+          }];
+          const billNumbersData = [{
+            Bill_Number: formData.billNumber,
+            Date: formData.date,
+          }];
+          const paymentData = formData.payments.map(payment => ({
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Amount_Received: payment.amountReceived || null,
+            Paymode: payment.paymode || null,
+          }));
+          const response = await fetch(`${API_URL}/api/sales${isEditMode ? '/update' : ''}`, {
+            method: isEditMode ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ salesData, balanceDueData, billNumbersData, paymentData }),
+          });
+          if (!response.ok) throw new Error('Network response was not ok');
+          showNotification(`Success: ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
+          resetForm();
+          fetchRecentSales();
+        } catch (error) {
+          showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
 
-         const resetForm = () => {
-           setFormData({
-             date: new Date().toISOString().split('T')[0],
-             billNumber: '',
-             salesman: '',
-             shopName: '',
-             department: '',
-             mobileNumber: '',
-             items: [{ item: '', amount: '', rmdCstm: '' }],
-             payments: [{ paymode: '', amountReceived: '' }],
-             balanceDue: '',
-             deliveryDate: '',
-           });
-           setIsEditMode(false);
-           setPrintPreview(null);
-         };
+      const resetForm = () => {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          billNumber: '',
+          salesman: '',
+          shopName: '',
+          mobileNumber: '',
+          emailId: '',
+          items: [{ item: '', amount: '', rmdCstm: '' }],
+          payments: [{ paymode: '', amountReceived: '' }],
+          balanceDue: '',
+          deliveryDate: '',
+        });
+        setIsEditMode(false);
+        setPrintPreview(null);
+      };
 
-         const { totalAmount, totalReceived } = updateTotal();
+      const { totalAmount, totalReceived } = updateTotal();
 
-         return React.createElement(
-           'div',
-           { className: 'bg-white p-6 rounded-lg shadow-lg' },
-           React.createElement('h2', { className: 'text-2xl font-bold text-center mb-4' }, 'Sales Data Entry'),
-           React.createElement(
-             'div',
-             { className: 'flex justify-between mb-4' },
-             React.createElement('button', { onClick: addItemRow, className: 'bg-green-600 text-white px-4 py-2 rounded' }, 'Add Item'),
-             React.createElement('button', { onClick: addPaymentRow, className: 'bg-green-500 text-white px-4 py-2 rounded' }, 'Add Payment'),
-             React.createElement('button', { onClick: () => document.getElementById('salesPrintSidebar').classList.toggle('open'), className: 'bg-blue-600 text-white px-4 py-2 rounded' }, 'Print Preview')
-           ),
-           React.createElement(
-             'form',
-             { onSubmit: handleSubmit, className: 'space-y-4' },
-             React.createElement(
-               'div',
-               { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Date'),
-                 React.createElement('input', { ref: dateRef, type: 'text', className: 'w-full p-2 border rounded', required: true })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Bill Number'),
-                 React.createElement('input', {
-                   type: 'text',
-                   value: formData.billNumber,
-                   onChange: e => setFormData({ ...formData, billNumber: e.target.value }),
-                   className: 'w-full p-2 border rounded',
-                   required: true,
-                 })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Salesman'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.salesman,
-                     onChange: e => setFormData({ ...formData, salesman: e.target.value }),
-                     className: 'w-full p-2 border rounded',
-                     required: true,
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   salesmen.map(name => React.createElement('option', { key: name, value: name }, name))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Shop Name'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.shopName,
-                     onChange: e => setFormData({ ...formData, shopName: e.target.value }),
-                     className: 'w-full p-2 border rounded',
-                     required: true,
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   shopNames.map(name => React.createElement('option', { key: name, value: name }, name))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Department'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.department,
-                     onChange: e => setFormData({ ...formData, department: e.target.value }),
-                     className: 'w-full p-2 border rounded',
-                     required: true,
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   departments.map(dept => React.createElement('option', { key: dept, value: dept }, dept))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Mobile Number'),
-                 React.createElement('input', {
-                   type: 'tel',
-                   value: formData.mobileNumber,
-                   onChange: e => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') }),
-                   className: 'w-full p-2 border rounded',
-                 })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Balance Due'),
-                 React.createElement('input', {
-                   type: 'number',
-                   value: formData.balanceDue,
-                   onChange: e => setFormData({ ...formData, balanceDue: e.target.value }),
-                   className: 'w-full p-2 border rounded',
-                 })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Delivery Date'),
-                 React.createElement('input', { ref: deliveryDateRef, type: 'text', className: 'w-full p-2 border rounded' })
-               )
-             ),
-             React.createElement(
-               'div',
-               null,
-               React.createElement('h3', { className: 'font-bold' }, 'Items'),
-               formData.items.map((row, index) =>
-                 React.createElement(
-                   'div',
-                   { key: index, className: 'flex gap-2 mb-2' },
-                   React.createElement(
-                     'select',
-                     {
-                       value: row.item,
-                       onChange: e => {
-                         const newItems = [...formData.items];
-                         newItems[index].item = e.target.value;
-                         setFormData({ ...formData, items: newItems });
-                       },
-                       className: 'w-full p-2 border rounded flex-1',
-                     },
-                     React.createElement('option', { value: '' }, 'Select'),
-                     items.map(item => React.createElement('option', { key: item, value: item }, item))
-                   ),
-                   React.createElement('input', {
-                     type: 'number',
-                     value: row.amount,
-                     onChange: e => {
-                       const newItems = [...formData.items];
-                       newItems[index].amount = e.target.value;
-                       setFormData({ ...formData, items: newItems });
-                     },
-                     className: 'w-full p-2 border rounded flex-1',
-                     placeholder: 'Amount',
-                   }),
-                   React.createElement(
-                     'select',
-                     {
-                       value: row.rmdCstm,
-                       onChange: e => {
-                         const newItems = [...formData.items];
-                         newItems[index].rmdCstm = e.target.value;
-                         setFormData({ ...formData, items: newItems });
-                       },
-                       className: 'w-full p-2 border rounded flex-1',
-                     },
-                     React.createElement('option', { value: '' }, 'Select'),
-                     rmdCstms.map(rmd => React.createElement('option', { key: rmd, value: rmd }, rmd))
-                   ),
-                   React.createElement(
-                     'button',
-                     {
-                       type: 'button',
-                       onClick: () => removeItemRow(index),
-                       className: 'bg-red-500 text-white px-2 rounded',
-                     },
-                     'X'
-                   )
-                 )
-               )
-             ),
-             React.createElement(
-               'div',
-               null,
-               React.createElement('h3', { className: 'font-bold' }, 'Payments'),
-               formData.payments.map((row, index) =>
-                 React.createElement(
-                   'div',
-                   { key: index, className: 'flex gap-2 mb-2' },
-                   React.createElement(
-                     'select',
-                     {
-                       value: row.paymode,
-                       onChange: e => {
-                         const newPayments = [...formData.payments];
-                         newPayments[index].paymode = e.target.value;
-                         setFormData({ ...formData, payments: newPayments });
-                       },
-                       className: 'w-full p-2 border rounded flex-1',
-                     },
-                     React.createElement('option', { value: '' }, 'Select'),
-                     paymodes.map(mode => React.createElement('option', { key: mode, value: mode }, mode))
-                   ),
-                   React.createElement('input', {
-                     type: 'number',
-                     value: row.amountReceived,
-                     onChange: e => {
-                       const newPayments = [...formData.payments];
-                       newPayments[index].amountReceived = e.target.value;
-                       setFormData({ ...formData, payments: newPayments });
-                     },
-                     className: 'w-full p-2 border rounded flex-1',
-                     placeholder: 'Amount',
-                   }),
-                   React.createElement(
-                     'button',
-                     {
-                       type: 'button',
-                       onClick: () => removePaymentRow(index),
-                       className: 'bg-red-500 text-white px-2 rounded',
-                     },
-                     'X'
-                   )
-                 )
-               )
-             ),
-             React.createElement(
-               'div',
-               { className: 'flex justify-between' },
-               React.createElement('p', null, `Total Amount: ${totalAmount.toFixed(2)}`),
-               React.createElement('p', null, `Amount Received: ${totalReceived.toFixed(2)}`)
-             ),
-             React.createElement(
-               'button',
-               { type: 'submit', className: 'bg-blue-500 text-white px-4 py-2 rounded' },
-               isEditMode ? 'Update' : 'Save'
-             ),
-             React.createElement(
-               'button',
-               {
-                 type: 'button',
-                 onClick: resetForm,
-                 className: 'bg-gray-500 text-white px-4 py-2 rounded ml-2',
-               },
-               'Clear'
-             )
-           ),
-           React.createElement(
-             'div',
-             { id: 'salesPrintSidebar', className: 'fixed top-0 right-0 h-full bg-white p-4 shadow-lg translate-x-full transition-transform' },
-             React.createElement(
-               'button',
-               {
-                 onClick: () => document.getElementById('salesPrintSidebar').classList.toggle('open'),
-                 className: 'text-red-500 mb-4',
-               },
-               'Close'
-             ),
-             React.createElement('input', {
-               id: 'salesKeyword',
-               type: 'text',
-               placeholder: 'Bill Number',
-               className: 'w-full p-2 border rounded mb-2',
-             }),
-             React.createElement(
-               'button',
-               { onClick: fetchPrintPreview, className: 'bg-blue-500 text-white px-4 py-2 rounded mb-2' },
-               'Preview'
-             ),
-             printPreview &&
-               React.createElement(
-                 'button',
-                 { onClick: handlePrint, className: 'bg-green-500 text-white px-4 py-2 rounded' },
-                 'Print'
-               )
-           ),
-           React.createElement(
-             'div',
-             { className: 'mt-6' },
-             React.createElement('h3', { className: 'font-bold' }, 'Recent Sales'),
-             React.createElement(
-               'table',
-               { className: 'w-full border-collapse' },
-               React.createElement(
-                 'thead',
-                 null,
-                 React.createElement(
-                   'tr',
-                   { className: 'bg-gray-200' },
-                   React.createElement('th', { className: 'p-2' }, 'Date'),
-                   React.createElement('th', { className: 'p-2' }, 'Bill Number'),
-                   React.createElement('th', { className: 'p-2' }, 'Action')
-                 )
-               ),
-               React.createElement(
-                 'tbody',
-                 null,
-                 recentSales.map(sale =>
-                   React.createElement(
-                     'tr',
-                     { key: sale.Bill_Number },
-                     React.createElement('td', { className: 'p-2' }, sale.Date),
-                     React.createElement('td', { className: 'p-2' }, sale.Bill_Number),
-                     React.createElement(
-                       'td',
-                       { className: 'p-2' },
-                       React.createElement(
-                         'button',
-                         {
-                           onClick: () => fetchSalesForEdit(sale.Bill_Number, sale.Date),
-                           className: 'bg-yellow-500 text-white px-2 rounded',
-                         },
-                         'Edit'
-                       )
-                     )
-                   )
-                 )
-               )
-             )
-           )
-         );
-       };
+      return React.createElement(
+        'div',
+        { className: 'bg-white p-6 rounded-lg shadow-lg' },
+        React.createElement('h2', { className: 'text-2xl font-bold text-center mb-4' }, 'Sales Data Entry'),
+        React.createElement(
+          'div',
+          { className: 'flex justify-between mb-4' },
+          React.createElement('button', { onClick: addItemRow, className: 'bg-green-600 text-white px-4 py-2 rounded' }, 'Add Item'),
+          React.createElement('button', { onClick: addPaymentRow, className: 'bg-green-500 text-white px-4 py-2 rounded' }, 'Add Payment'),
+          React.createElement('button', { onClick: () => document.getElementById('salesPrintSidebar').classList.toggle('open'), className: 'bg-blue-600 text-white px-4 py-2 rounded' }, 'Print Preview')
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit, className: 'space-y-4' },
+          React.createElement(
+            'div',
+            { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Date'),
+              React.createElement('input', { ref: dateRef, type: 'text', className: 'w-full p-2 border rounded', required: true })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Bill Number'),
+              React.createElement('input', {
+                type: 'text',
+                value: formData.billNumber,
+                onChange: e => setFormData({ ...formData, billNumber: e.target.value }),
+                className: 'w-full p-2 border rounded',
+                required: true,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Salesman'),
+              React.createElement(
+                'select',
+                {
+                  value: formData.salesman,
+                  onChange: e => setFormData({ ...formData, salesman: e.target.value }),
+                  className: 'w-full p-2 border rounded',
+                  required: true,
+                },
+                React.createElement('option', { value: '' }, 'Select'),
+                salesmen.map(name => React.createElement('option', { key: name, value: name }, name))
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Shop Name'),
+              React.createElement(
+                'select',
+                {
+                  value: formData.shopName,
+                  onChange: e => setFormData({ ...formData, shopName: e.target.value }),
+                  className: 'w-full p-2 border rounded',
+                  required: true,
+                },
+                React.createElement('option', { value: '' }, 'Select'),
+                shopNames.map(name => React.createElement('option', { key: name, value: name }, name))
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Email ID'),
+              React.createElement('input', {
+                type: 'email',
+                value: formData.emailId,
+                onChange: e => setFormData({ ...formData, emailId: e.target.value }),
+                className: 'w-full p-2 border rounded',
+                required: true,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Mobile Number'),
+              React.createElement('input', {
+                type: 'tel',
+                value: formData.mobileNumber,
+                onChange: e => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') }),
+                className: 'w-full p-2 border rounded',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Balance Due'),
+              React.createElement('input', {
+                type: 'number',
+                value: formData.balanceDue,
+                onChange: e => setFormData({ ...formData, balanceDue: e.target.value }),
+                className: 'w-full p-2 border rounded',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Delivery Date'),
+              React.createElement('input', { ref: deliveryDateRef, type: 'text', className: 'w-full p-2 border rounded' })
+            )
+          ),
+          React.createElement(
+            'div',
+            null,
+            React.createElement('h3', { className: 'font-bold' }, 'Items'),
+            formData.items.map((row, index) =>
+              React.createElement(
+                'div',
+                { key: index, className: 'flex gap-2 mb-2' },
+                React.createElement(
+                  'select',
+                  {
+                    value: row.item,
+                    onChange: e => {
+                      const newItems = [...formData.items];
+                      newItems[index].item = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    },
+                    className: 'w-full p-2 border rounded flex-1',
+                  },
+                  React.createElement('option', { value: '' }, 'Select'),
+                  items.map(item => React.createElement('option', { key: item, value: item }, item))
+                ),
+                React.createElement('input', {
+                  type: 'number',
+                  value: row.amount,
+                  onChange: e => {
+                    const newItems = [...formData.items];
+                    newItems[index].amount = e.target.value;
+                    setFormData({ ...formData, items: newItems });
+                  },
+                  className: 'w-full p-2 border rounded flex-1',
+                  placeholder: 'Amount',
+                }),
+                React.createElement(
+                  'select',
+                  {
+                    value: row.rmdCstm,
+                    onChange: e => {
+                      const newItems = [...formData.items];
+                      newItems[index].rmdCstm = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    },
+                    className: 'w-full p-2 border rounded flex-1',
+                  },
+                  React.createElement('option', { value: '' }, 'Select'),
+                  rmdCstms.map(rmd => React.createElement('option', { key: rmd, value: rmd }, rmd))
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    onClick: () => removeItemRow(index),
+                    className: 'bg-red-500 text-white px-2 rounded',
+                  },
+                  'X'
+                )
+              )
+            )
+          ),
+          React.createElement(
+            'div',
+            null,
+            React.createElement('h3', { className: 'font-bold' }, 'Payments'),
+            formData.payments.map((row, index) =>
+              React.createElement(
+                'div',
+                { key: index, className: 'flex gap-2 mb-2' },
+                React.createElement(
+                  'select',
+                  {
+                    value: row.paymode,
+                    onChange: e => {
+                      const newPayments = [...formData.payments];
+                      newPayments[index].paymode = e.target.value;
+                      setFormData({ ...formData, payments: newPayments });
+                    },
+                    className: 'w-full p-2 border rounded flex-1',
+                  },
+                  React.createElement('option', { value: '' }, 'Select'),
+                  paymodes.map(mode => React.createElement('option', { key: mode, value: mode }, mode))
+                ),
+                React.createElement('input', {
+                  type: 'number',
+                  value: row.amountReceived,
+                  onChange: e => {
+                    const newPayments = [...formData.payments];
+                    newPayments[index].amountReceived = e.target.value;
+                    setFormData({ ...formData, payments: newPayments });
+                  },
+                  className: 'w-full p-2 border rounded flex-1',
+                  placeholder: 'Amount',
+                }),
+                React.createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    onClick: () => removePaymentRow(index),
+                    className: 'bg-red-500 text-white px-2 rounded',
+                  },
+                  'X'
+                )
+              )
+            )
+          ),
+          React.createElement(
+            'div',
+            { className: 'flex justify-between' },
+            React.createElement('p', null, `Total Amount: ${totalAmount.toFixed(2)}`),
+            React.createElement('p', null, `Amount Received: ${totalReceived.toFixed(2)}`)
+          ),
+          React.createElement(
+            'button',
+            { type: 'submit', className: 'bg-blue-600 text-white px-4 py-2 rounded' },
+            isEditMode ? 'Update' : 'Save'
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              onClick: resetForm,
+              className: 'bg-gray-700 text-white px-4 py-2',
+            },
+            'Clear'
+          )
+        ),
+        React.createElement(
+          'div',
+          { id: 'salesPrintSidebar', className: 'fixed top-0 right-0 h-full bg-blue-800 text-white p-4 shadow-lg translate-x-full transition-transform' },
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              onClick: () => document.getElementById('salesPrintSidebar').classList.toggle('open'),
+              className: 'text-blue-600 mb-4',
+            },
+            'Close'
+          ),
+          React.createElement('input', {
+            id: 'salesKeyword',
+            type: 'text',
+            placeholder: 'Bill Number',
+            className: 'w-full p-2 border rounded mb-2',
+          }),
+          React.createElement(
+            'button',
+            { onClick: fetchPrintPreview, className: 'bg-blue-600 text-white px-4 py-2 rounded mb-2' },
+            'Preview'
+          ),
+          printPreview &&
+            React.createElement(
+              'button',
+              { onClick: handlePrint, className: 'bg-green-600 text-white px-4 py-2 rounded' },
+              'Print'
+            )
+        ),
+        React.createElement(
+          'div',
+          { className: 'mt-6' },
+          React.createElement('h3', { className: 'font-bold' }, 'Recent Sales'),
+          React.createElement(
+            'table',
+            { className: 'w-full border-collapse' },
+            React.createElement(
+              'thead',
+              null,
+              React.createElement(
+                'tr',
+                { className: 'bg-gray-200' },
+                React.createElement('th', { className: 'p-2' }, 'Date'),
+                React.createElement('th', { className: 'p-2' }, 'Bill Number'),
+                React.createElement('th', { className: 'p-2' }, 'Action')
+              )
+            ),
+            React.createElement(
+              'tbody',
+              null,
+              recentSales.map(sale =>
+                React.createElement(
+                  'tr',
+                  { key: sale.Bill_Number },
+                  React.createElement('td', { className: 'p-2' }, sale.Date),
+                  React.createElement('td', { className: ' p-2' }, sale.Bill_Number),
+                  React.createElement(
+                    'td',
+                    { className: 'p-2' },
+                    React.createElement(
+                      'button',
+                      {
+                        onClick: () => fetchSalesForEdit(sale.Bill_Number, sale.Date),
+                        className: 'bg-yellow-500 text-white px-2 rounded',
+                      },
+                      'Edit'
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+    };
 
-       const BalanceDueForm = () => {
-         const [formData, setFormData] = React.useState({
-           date: new Date().toISOString().split('T')[0],
-           billNumber: '',
-           salesman: '',
-           shopName: '',
-           department: '',
-           mobileNumber: '',
-           dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
-         });
-         const [isEditMode, setIsEditMode] = React.useState(false);
-         const [salesmen, setSalesmen] = React.useState([]);
-         const [shopNames, setShopNames] = React.useState([]);
-         const [departments, setDepartments] = React.useState([]);
-         const [recentDueBalances, setRecentDueBalances] = React.useState([]);
-         const [printPreview, setPrintPreview] = React.useState(null);
-         const dateRef = React.useRef(null);
+    const BalanceDueForm = () => {
+      const [formData, setFormData] = React.useState({
+        date: new Date().toISOString().split('T')[0],
+        billNumber: '',
+        salesman: '',
+        shopName: '',
+        mobileNumber: '',
+        emailId: '',
+        dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber }],
+        },
+      const [isEditMode, setIsEditMode] = React.useState(false);
+      const [salesmen, setSalesmen] = React.useState([]);
+      const [shopNames, setShopNames] = React.useState([]);
+      const [recentDueBalances, setRecentDueBalances] = React.useState([]);
+      const [printPreview, setPrintPreview] = React.useState(null);
+      const dateRef = React.useRef(null);
 
-         React.useEffect(() => {
-           flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
-           fetchNames();
-           fetchRecentDueBalances();
-         }, []);
+      React.useEffect(() => {
+        flatpickr(dateRef.current, { dateFormat: 'Y-m-d', defaultDate: formData.date });
+        fetchNames();
+        fetchRecentDueBalances();
+      }, []);
 
-         const fetchNames = async () => {
-           try {
-             const response = await fetch(`${API_URL}/api/names`);
-             const data = await response.json();
-             setSalesmen(data.salesmen || []);
-             setShopNames(data.shopNames || []);
-             setDepartments(data.departments || []);
-           } catch (error) {
-             showNotification('Failed to load form options.', 'error');
-           }
-         };
+      const fetchNames = async () => {
+        try {
+          const [salesmenRes, shopNamesRes] = await Promise.all([
+            fetch(`${API_URL}/api/salesmen`),
+            fetch(`${API_URL}/api/shop-names`),
+          ]);
+          const [salesmenData, shopNamesData] = await Promise.all([
+            salesmenRes.json(),
+            shopNamesRes.json(),
+          ]);
+          setSalesmen(salesmenData || []);
+          setShopNames(shopNamesData || []);
+        } catch (error) {
+          showNotification('Failed to load form options.', 'error');
+        }
+      };
 
-         const fetchRecentDueBalances = async () => {
-           try {
-             const response = await fetch(`${API_URL}/api/recent-due-balances`);
-             const dueBalances = await response.json();
-             setRecentDueBalances(dueBalances);
-           } catch (error) {
-             showNotification('Failed to load recent due balances.', 'error');
-           }
-         };
+      const fetchRecentDueBalances = async () => {
+        try {
+          const response = await fetch(`${API_URL}/api/recent-due-balance`);
+          const dueBalances = await response.json();
+          setRecentDueBalances(dueBalances);
+        } catch (error) {
+          showNotification('Failed to load recent due balances.', 'error');
+        }
+      };
 
-         const fetchDueBalanceForEdit = async (billNumber, date) => {
-           showLoadingOverlay('Loading due balance data...');
-           try {
-             const response = await fetch(`${API_URL}/api/due-balance?billNumber=${billNumber}&date=${date}`);
-             const data = await response.json();
-             if (!data.dueBalanceData || data.dueBalanceData.length === 0) {
-               showNotification('No data found.', 'error');
-               resetForm();
-               return;
-             }
-             const dueBalanceData = data.dueBalanceData[0];
-             setFormData({
-               date: dueBalanceData.Date,
-               billNumber: dueBalanceData.Bill_Number,
-               salesman: dueBalanceData.Salesman,
-               shopName: dueBalanceData.Shop_Name,
-               department: dueBalanceData.Department,
-               mobileNumber: dueBalanceData.Mobile_Number || '',
-               dueBalanceRows: data.dueBalanceData.map(row => ({
-                 dueBalanceReceived: row.Due_Balance_Received,
-                 dueBalanceBillNumber: row.Due_Balance_Bill_Number,
-               })),
-             });
-             setIsEditMode(true);
-           } catch (error) {
-             showNotification('Failed to load due balance data.', 'error');
-             resetForm();
-           } finally {
-             hideLoadingOverlay();
-           }
-         };
+      const fetchDueBalanceForEdit = async (billNumber, date) => {
+        showLoadingOverlay('Loading due balance data...');
+        try {
+          const response = await fetch(`${API_URL}/api/due-balance?billNumber=${billNumber}&date=${date}`);
+          const data = await response.json();
+          if (!data.dueBalanceData || data.dueBalanceData.length === 0) {
+            showNotification('No data found.', 'error');
+            resetForm();
+            return;
+          }
+          const dueBalanceData = data.dueBalanceData[0];
+          setFormData({
+            date: dueBalanceData.Date,
+            billNumber: dueBalanceData.Bill_Number,
+            salesman: dueBalanceData.Salesman,
+            shopName: dueBalanceData.Shop_Name,
+            mobileNumber: dueBalanceData.Mobile_Number || '',
+            emailId: dueBalanceData.Email_ID || '',
+            dueBalanceRows: data.dueBalanceData.map(row => ({
+              dueBalanceReceived: row.Due_Balance_Received,
+              dueBalanceBillNumber: row.Due_Balance_Bill_Number,
+            })),
+          });
+          setIsEditMode(true);
+        } catch (error) {
+          showNotification('Failed to load due balance data.', 'error');
+          resetForm();
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
 
-         const fetchPrintPreview = async () => {
-           const keyword = document.getElementById('dueBalanceKeyword').value;
-           const date = formData.date;
-           if (!keyword || !date) {
-             showNotification('Enter bill number and date.', 'error');
-             return;
-           }
-           try {
-             const response = await fetch(`${API_URL}/api/due-balance?billNumber=${keyword}&date=${date}`);
-             const data = await response.json();
-             if (!data.dueBalanceData || data.dueBalanceData.length === 0) {
-               showNotification('No data found.', 'error');
-               setPrintPreview(null);
-               return;
-             }
-             setPrintPreview(data);
-           } catch (error) {
-             showNotification('Failed to load print preview.', 'error');
-           }
-         };
+      const fetchPrintPreview = async () => {
+        const keyword = document.getElementById('dueBalanceKeyword').value;
+        const date = formData.date;
+        if (!keyword || !date) {
+          showNotification('Enter bill number.', 'error');
+          return;
+        }
+        try {
+          const response = await fetch(`${API_URL}/api/due-balance?billNumber=${keyword}&date=${date}`);
+          const data = await response.json();
+          if (!data.dueBalanceData || data.dueBalanceData.length === 0) {
+            showNotification('No data found.', 'error');
+            setPrintPreview(null);
+            return;
+          }
+          setPrintPreview(data);
+        } catch (error) {
+          showNotification('Failed to load print preview.', 'error');
+        }
+      };
 
-         const handlePrint = () => {
-           if (!printPreview) return;
-           const printWindow = window.open('', '_blank');
-           printWindow.document.write(`
-             <html>
-               <head>
-                 <style>
-                   body { font-family: Arial; font-size: 10pt; margin: 5mm; }
-                   h3 { font-size: 12pt; text-align: center; }
-                   table { width: 100%; border-collapse: collapse; }
-                   th, td { border-bottom: 1px dotted #000; padding: 2mm; }
-                   .header-row { display: flex; justify-content: space-between; }
-                 </style>
-               </head>
-               <body>
-                 <h3>Due Balance Receipt</h3>
-                 <div class="header-row">
-                   <p>Bill Number: ${printPreview.dueBalanceData[0].Bill_Number}</p>
-                   <p>Date: ${printPreview.dueBalanceData[0].Date}</p>
-                 </div>
-                 <p>Salesman: ${printPreview.dueBalanceData[0].Salesman}</p>
-                 <p>Shop Name: ${printPreview.dueBalanceData[0].Shop_Name}</p>
-                 <p>Department: ${printPreview.dueBalanceData[0].Department}</p>
-                 <p>Mobile Number: ${printPreview.dueBalanceData[0].Mobile_Number || '-'}</p>
-                 <table>
-                   <tr><th>Due Balance Received</th><th>Due Balance Bill Number</th></tr>
-                   ${printPreview.dueBalanceData
-                     .map(row => `<tr><td>${row.Due_Balance_Received}</td><td>${row.Due_Balance_Bill_Number}</td></tr>`)
-                     .join('')}
-                 </table>
-               </body>
-             </html>
-           `);
-           printWindow.document.close();
-           printWindow.print();
-         };
+      const handlePrint = () => {
+        if (!printPreview) return;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial; font-size: 10pt; margin: 5mm; }
+                h3 { font-size: 12pt; text-align: center; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border-bottom: 1px dotted #000; padding: 2mm; }
+                .header-row { display: flex; justify-content: space-between; }
+              </style>
+            </head>
+            <body>
+              <h3>Due Balance Receipt</h3>
+              <div class="header-row">
+                <p>Bill Number: ${printPreview.dueBalanceData[0].Bill_Number}</p>
+                <p>Date: ${printPreview.dueBalanceData[0].Date}</p>
+              </div>
+              <p>Salesman: ${printPreview.dueBalanceData[0].Salesman}</p>
+              <p>Shop Name: ${printPreview.dueBalanceData[0].Shop_Name}</p>
+              <p>Department: SYJ-Gents</p>
+              <p>Mobile Number: ${printPreview.dueBalanceData[0].Mobile_Number || '-'}</p>
+              <table>
+                <tr><th>Due Balance Received</th><th>Due Balance Bill Number</th></tr>
+                ${printPreview.dueBalanceData
+                  .map(row => `<tr><td>${row.Due_Balance_Received}</td><td>${row.Due_Balance_Bill_Number}</td></tr>`)
+                  .join('')}
+              </table>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      };
 
-         const addDueBalanceRow = () => setFormData({
-           ...formData,
-           dueBalanceRows: [...formData.dueBalanceRows, { dueBalanceReceived: '', dueBalanceBillNumber: '' }],
-         });
+      const addDueBalanceRow = () => setFormData({
+        ...formData,
+        dueBalanceRows: [...formData.dueBalanceRows, { dueBalanceReceived: '', dueBalanceBillNumber: '' }],
+      });
 
-         const removeDueBalanceRow = index => setFormData({
-           ...formData,
-           dueBalanceRows: formData.dueBalanceRows.filter((_, i) => i !== index),
-         });
+      const removeDueBalanceRow = index => setFormData({
+        ...formData,
+        dueBalanceRows: formData.dueBalanceRows.filter((_, i) => i !== index),
+      });
 
-         const isDueBalanceRowFilled = row => row.dueBalanceReceived && row.dueBalanceBillNumber;
+      const isDueBalanceRowFilled = row => row.dueBalanceReceived && row.dueBalanceBillNumber;
 
-         const checkBillNumberDuplicate = async () => {
-           if (isEditMode) return false;
-           try {
-             const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
-             const data = await response.json();
-             return data.isDuplicate;
-           } catch (error) {
-             showNotification('Error checking duplicate bill number.', 'error');
-             return true;
-           }
-         };
+      const checkBillNumberDuplicate = async () => {
+        if (isEditMode) return false;
+        try {
+          const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
+          const data = await response.json();
+          return data.isDuplicate;
+        } catch (error) {
+          showNotification('Error checking duplicate bill number.', 'error');
+          return true;
+        }
+      };
 
-         const handleSubmit = async e => {
-           e.preventDefault();
-           if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.department) {
-             showNotification('Please fill all required fields.', 'error');
-             return;
-           }
-           const isDuplicate = await checkBillNumberDuplicate();
-           if (isDuplicate) {
-             showNotification('Bill number and date already exist.', 'error');
-             return;
-           }
-           if (!formData.dueBalanceRows.some(isDueBalanceRowFilled)) {
-             showNotification('Please fill at least one due balance row.', 'error');
-             return;
-           }
-           showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
-           try {
-             const response = await fetch(`${API_URL}/api/due-balance${isEditMode ? '/update' : ''}`, {
-               method: isEditMode ? 'PUT' : 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify(formData),
-             });
-             const result = await response.json();
-             showNotification(`Success: ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
-             resetForm();
-             fetchRecentDueBalances();
-           } catch (error) {
-             showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
-           } finally {
-             hideLoadingOverlay();
-           }
-         };
+      const handleSubmit = async e => {
+        e.preventDefault();
+        if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.emailId) {
+          showNotification('Please fill in all required fields.', 'error');
+          return;
+        }
+        const isDuplicate = await checkBillNumberDuplicate();
+        if (isDuplicate) {
+          showNotification('Bill number and date already exist.', 'error');
+          return;
+        }
+        if (!formData.dueBalanceRows.some(isDueBalanceRowFilled)) {
+          showNotification('Please fill at least one due balance row.', 'error');
+          return;
+        }
+        showLoadingOverlay(isEditMode ? 'Updating...' : 'Saving...');
+        try {
+          const salesData = [{
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Salesman: formData.salesman,
+            Shop_Name: formData.shopName,
+            Email_ID: formData.emailId,
+            Mobile_Number: formData.mobileNumber || null,
+            Item: null,
+            Amount: null,
+            RMD_CSTM: null,
+            Paymode: null,
+            Amount_Received: null,
+            Balance_Due: null,
+            Delivery_Date: null,
+          }];
+          const balanceDueData = formData.dueBalanceRows.map(row => ({
+            Date: formData.date,
+            Bill_Number: formData.billNumber,
+            Salesman: formData.salesman,
+            Shop_Name: formData.shopName,
+            Email_ID: formData.emailId,
+            Mobile_Number: formData.mobileNumber || null,
+            Due_Balance_Received: row.dueBalanceReceived || null,
+            Due_Balance_Bill_Number: row.dueBalanceBillNumber || null,
+          }));
+          const billNumbersData = [{
+            Bill_Number: formData.billNumber,
+            Date: formData.date,
+          }];
+          const paymentData = [];
+          const response = await fetch(`${API_URL}/api/sales${isEditMode ? '/update' : ''}`, {
+            method: isEditMode ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ salesData, balanceDueData, billNumbersData, paymentData }),
+          });
+          if (!response.ok) throw new Error('Network response was not ok');
+          showNotification(`Success: ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
+          resetForm();
+          fetchRecentDueBalances();
+        } catch (error) {
+          showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
+        } finally {
+          hideLoadingOverlay();
+        }
+      };
 
-         const resetForm = () => {
-           setFormData({
-             date: new Date().toISOString().split('T')[0],
-             billNumber: '',
-             salesman: '',
-             shopName: '',
-             department: '',
-             mobileNumber: '',
-             dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
-           });
-           setIsEditMode(false);
-           setPrintPreview(null);
-         };
+      const resetForm = () => {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          billNumber: '',
+          salesman: '',
+          shopName: '',
+          mobileNumber: '',
+          emailId: '',
+          dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
+        });
+        setIsEditMode(false);
+        setPrintPreview(null);
+      };
 
-         return React.createElement(
-           'div',
-           { className: 'bg-white p-6 rounded-lg shadow-lg' },
-           React.createElement('h2', { className: 'text-2xl font-bold text-center mb-4' }, 'Due Balance Data Entry'),
-           React.createElement(
-             'div',
-             { className: 'flex justify-between mb-4' },
-             React.createElement('button', { onClick: addDueBalanceRow, className: 'bg-green-600 text-white px-4 py-2 rounded' }, 'Add Due Balance'),
-             React.createElement('button', { onClick: () => document.getElementById('dueBalancePrintSidebar').classList.toggle('open'), className: 'bg-blue-600 text-white px-4 py-2 rounded' }, 'Print Preview')
-           ),
-           React.createElement(
-             'form',
-             { onSubmit: handleSubmit, className: 'space-y-4' },
-             React.createElement(
-               'div',
-               { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Date'),
-                 React.createElement('input', { ref: dateRef, type: 'text', className: 'w-full p-2 border rounded', required: true })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Bill Number'),
-                 React.createElement('input', {
-                   type: 'text',
-                   value: formData.billNumber,
-                   onChange: e => setFormData({ ...formData, billNumber: e.target.value }),
-                   className: 'w-full p-2 border rounded',
-                   required: true,
-                 })
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Salesman'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.salesman,
-                     onChange: e => setFormData({ ...formData, salesman: e.target.value }),
-                     className: 'p-2 border rounded w-full',
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   salesmen.map(name => React.createElement('option', { key: name, value: name }, name))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Shop Name'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.shopName,
-                     onChange: e => setFormData({ ...formData, shopName: e.target.value }),
-                     className: 'w-full p-2 border rounded',
-                     required: true,
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   shopNames.map(name => React.createElement('option', { key: name, value: name }, name))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Department'),
-                 React.createElement(
-                   'select',
-                   {
-                     value: formData.department,
-                     onChange: e => setFormData({ ...formData, department: e.target.value }),
-                     className: 'w-full p-2 border rounded',
-                     required: true,
-                   },
-                   React.createElement('option', { value: '' }, 'Select'),
-                   departments.map(dept => React.createElement('option', { key: dept, value: dept }, dept))
-                 )
-               ),
-               React.createElement(
-                 'div',
-                 null,
-                 React.createElement('label', { className: 'block font-bold' }, 'Mobile Number'),
-                 React.createElement('input', {
-                   type: 'tel',
-                   value: formData.mobileNumber,
-                   onChange: e => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') }),
-                   className: 'w-full p-2 border rounded',
-                 })
-               )
-             ),
-             React.createElement(
-               'div',
-               null,
-               React.createElement('h3', { className: 'font-bold' }, 'Due Balances'),
-               formData.dueBalanceRows.map((row, index) =>
-                 React.createElement(
-                   'div',
-                   { key: index, className: 'flex gap-2 mb-2' },
-                   React.createElement('input', {
-                     type: 'number',
-                     value: row.dueBalanceReceived,
-                     onChange: e => {
-                       const newRows = [...formData.dueBalanceRows];
-                       newRows[index].dueBalanceReceived = e.target.value;
-                       setFormData({ ...formData, dueBalanceRows: newRows });
-                     },
-                     className: 'w-full p-2 border rounded flex-1',
-                     placeholder: 'Due Balance Received',
-                   }),
-                   React.createElement('input', {
-                     type: 'text',
-                     value: row.dueBalanceBillNumber,
-                     onChange: e => {
-                       const newRows = [...formData.dueBalanceRows];
-                       newRows[index].dueBalanceBillNumber = e.target.value;
-                       setFormData({ ...formData, dueBalanceRows: newRows });
-                     },
-                     className: 'w-full p-2 border rounded flex-1',
-                     placeholder: 'Due Balance Bill Number',
-                   }),
-                   React.createElement(
-                     'button',
-                     {
-                       type: 'button',
-                       onClick: () => removeDueBalanceRow(index),
-                       className: 'bg-red-600 text-white px-2 rounded',
-                     },
-                     'X'
-                   )
-                 )
-               )
-             ),
-             React.createElement(
-               'button',
-               { type: 'submit', className: 'bg-blue-600 text-white px-4 py-2 rounded' },
-               isEditMode ? 'Update' : 'Save'
-             ),
-             React.createElement(
-               'button',
-               {
-                 type: 'button',
-                 onClick: resetForm,
-                 className: 'bg-gray-600 text-white px-4 py-2 rounded ml-2',
-               },
-               'Clear'
-             )
-           ),
-           React.createElement(
-             'div',
-             { id: 'dueBalancePrintSidebar', className: 'fixed top-0 right-0 h-full bg-white p-4 shadow-lg translate-x-full transition-transform' },
-             React.createElement(
-               'button',
-               {
-                 onClick: () => document.getElementById('dueBalancePrintSidebar').classList.toggle('open'),
-                 className: 'text-blue-600 mb-4',
-               },
-               'Close'
-             ),
-             React.createElement('input', {
-               id: 'dueBalanceKeyword',
-               type: 'text',
-               placeholder: 'Bill Number',
-               className: 'w-full p-2 border rounded mb-2',
-             }),
-             React.createElement(
-               'button',
-               { onClick: fetchPrintPreview, className: 'bg-blue-600 text-white px-4 py-2 rounded mb-2' },
-               'Preview'
-             ),
-             printPreview &&
-               React.createElement(
-                 'button',
-                 { onClick: handlePrint, className: 'bg-green-600 text-white px-4 py-2 rounded' },
-                 'Print'
-               )
-           ),
-           React.createElement(
-             'div',
-             { className: 'mt-6' },
-             React.createElement('h3', { className: 'font-bold' }, 'Recent Due Balances'),
-             React.createElement(
-               'table',
-               { className: 'w-full border-collapse' },
-               React.createElement(
-                 'thead',
-                 null,
-                 React.createElement(
-                   'tr',
-                   { className: 'bg-gray-200' },
-                   React.createElement('th', { className: 'p-2' }, 'Date'),
-                   React.createElement('th', { className: 'p-2' }, 'Bill Number'),
-                   React.createElement('th', { className: 'p-2' }, 'Action')
-                 )
-               ),
-               React.createElement(
-                 'tbody',
-                 null,
-                 recentDueBalances.map(due =>
-                   React.createElement(
-                     'tr',
-                     { key: due.Bill_Number },
-                     React.createElement('td', { className: 'p-2' }, due.Date),
-                     React.createElement('td', { className: 'p-2' }, due.Bill_Number),
-                     React.createElement(
-                       'td',
-                       { className: 'p-2' },
-                       React.createElement(
-                         'button',
-                         {
-                           onClick: () => fetchDueBalanceForEdit(due.Bill_Number, due.Date),
-                           className: 'bg-yellow-600 text-white px-2 rounded',
-                         },
-                         'Edit'
-                       )
-                     )
-                   )
-                 )
-               )
-             )
-           )
-         );
-       };
+      return React.createElement(
+        'div',
+        { className: 'bg-white p-6 rounded-lg shadow-lg' },
+        React.createElement('h2', { className: 'text-2xl font-bold text-center mb-4' }, 'Due Balance Data Entry'),
+        React.createElement(
+          'div',
+          { className: 'flex justify-between mb-4' },
+          React.createElement('button', { onClick: addDueBalanceRow, className: 'bg-green-600 text-white px-4 py-2 rounded' }, 'Add Due Balance'),
+          React.createElement('button', { onClick: () => document.getElementById('dueBalancePrintSidebar').classList.toggle('open'), className: 'bg-blue-600 text-white px-4 py-2 rounded' }, 'Print Preview')
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit, className: 'space-y-4' },
+          React.createElement(
+            'div',
+            { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Date'),
+              React.createElement('input', { ref: dateRef, type: 'text', className: 'w-full p-2 border rounded', required: true })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Bill Number'),
+              React.createElement('input', {
+                type: 'text',
+                value: formData.billNumber,
+                onChange: e => setFormData({ ...formData, billNumber: e.target.value }),
+                className: 'w-full p-2 border rounded',
+                required: true,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Salesman'),
+              React.createElement(
+                'select',
+                {
+                  value: formData.salesman,
+                  onChange: e => setFormData({ ...formData, salesman: e.target.value }),
+                  className: 'p-2 border rounded w-full',
+                  required: true,
+                },
+                React.createElement('option', { value: '' }, 'Select'),
+                salesmen.map(name => React.createElement('option', { key: name, value: name }, name))
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Shop Name'),
+              React.createElement(
+                'select',
+                {
+                  value: formData.shopName,
+                  onChange: e => setFormData({ ...formData, shopName: e.target.value }),
+                  className: 'w-full p-2 border rounded',
+                  required: true,
+                },
+                React.createElement('option', { value: '' }, 'Select'),
+                shopNames.map(name => React.createElement('option', { key: name, value: name }, name))
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Email ID'),
+              React.createElement('input', {
+                type: 'email',
+                value: formData.emailId,
+                onChange: e => setFormData({ ...formData, emailId: e.target.value }),
+                className: 'w-full p-2 border rounded',
+                required: true,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block font-bold' }, 'Mobile Number'),
+              React.createElement('input', {
+                type: 'tel',
+                value: formData.mobileNumber,
+                onChange: e => setFormData({ ...formData, mobileNumber: e.target.value.replace(/[^0-9]/g, '') }),
+                className: 'w-full p-2 border rounded',
+              })
+            )
+          ),
+          React.createElement(
+            'div',
+            null,
+            React.createElement('h3', { className: 'font-bold' }, 'Due Balances'),
+            formData.dueBalanceRows.map((row, index) =>
+              React.createElement(
+                'div',
+                { key: index, className: 'flex gap-2 mb-2' },
+                React.createElement('input', {
+                  type: 'number',
+                  value: row.dueBalanceReceived,
+                  onChange: e => {
+                    const newRows = [...formData.dueBalanceRows];
+                    newRows[index].dueBalanceReceived = e.target.value;
+                    setFormData({ ...formData, dueBalanceRows: newRows });
+                  },
+                  className: 'w-full p-2 border rounded flex-1',
+                  placeholder: 'Due Balance Received',
+                }),
+                React.createElement('input', {
+                  type: 'text',
+                  value: row.dueBalanceBillNumber,
+                  onChange: e => {
+                    const newRows = [...formData.dueBalanceRows];
+                    newRows[index].dueBalanceBillNumber = e.target.value;
+                    setFormData({ ...formData, dueBalanceRows: newRows });
+                  },
+                  className: 'w-full p-2 border rounded flex-1',
+                  placeholder: 'Due Balance Bill Number',
+                }),
+                React.createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    onClick: () => removeDueBalanceRow(index),
+                    className: 'bg-red-600 text-white px-2 rounded',
+                  },
+                  'X'
+                )
+              )
+            )
+          ),
+          React.createElement(
+            'button',
+            { type: 'submit', className: 'bg-blue-600 text-white px-4 py-2 rounded' },
+            isEditMode ? 'Update' : 'Save'
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              onClick: resetForm,
+              className: 'bg-gray-600 text-white px-4 py-2 rounded ml-2',
+            },
+            'Clear'
+          )
+        ),
+        React.createElement(
+          'div',
+          { id: 'dueBalancePrintSidebar', className: 'fixed top-0 right-0 h-full bg-white p-4 shadow-lg translate-x-full transition-transform' },
+          React.createElement(
+            'button',
+            {
+              onClick: () => document.getElement ofElementById('dueBalancePrintSidebar').classList.toggle('open'),
+              className: 'text-blue-600 mb-4',
+            },
+            'Close'
+          ),
+          React.createElement('input', {
+            id: 'dueBalanceKeyword',
+            type: 'text',
+            placeholder: 'Bill Number',
+            className: 'w-full p-2 border rounded mb-2',
+          }),
+          React.createElement(
+            'button',
+            { onClick: fetchPrintPreview, className: 'bg-blue-600 text-white px-4 py-2 rounded mb-2' },
+            'Preview'
+          ),
+          printPreview &&
+            React.createElement(
+              'button',
+              { onClick: handlePrint, className: 'bg-green-600 text-white px-4 py-2 rounded' },
+              'Print'
+            )
+        ),
+        React.createElement(
+          'div',
+          { className: 'mt-6' },
+          React.createElement('h3', { className: 'font-bold' }, 'Recent Due Balances'),
+          React.createElement(
+            'table',
+            { className: 'w-full border-collapse' },
+            React.createElement(
+              'thead',
+              null,
+              React.createElement(
+                'tr',
+                { className: 'bg-gray-200' },
+                React.createElement('th', { className: 'p-2' }, 'Date'),
+                React.createElement('th', { className: 'p-2' }, 'Bill Number'),
+                React.createElement('th', { className: 'p-2' }, 'Action')
+              )
+            ),
+            React.createElement(
+              'tbody',
+              null,
+              recentDueBalances.map(due =>
+                React.createElement(
+                  'tr',
+                  { key: due.Bill_Number },
+                  React.createElement('td', { className: 'p-2' }, due.Date),
+                  React.createElement('td', { className: 'p-2' }, due.Bill_Number),
+                  React.createElement(
+                    'td',
+                    { className: 'p-2' },
+                    React.createElement(
+                      'button',
+                      {
+                        onClick: () => fetchDueBalanceForEdit(due.Bill_Number, due.Date),
+                        className: 'bg-yellow-600 text-white px-2 rounded',
+                      },
+                      'Edit'
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+    };
 
-       const root = createRoot(document.getElementById('root'));
-       root.render(React.createElement(App));
-     </script>
-   </body>
-   </html>
+    const root = createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
