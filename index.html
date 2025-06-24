@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYJPMOPMH POS Web</title>
-  <link rel="stylesheet" href="tailwind.css">
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYJPMOPMH POS Web App</title>
+    <link rel="stylesheet" href="tailwind.css">
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="root"></div>
@@ -19,7 +19,7 @@
 
     function showNotification(message, type = 'info') {
       const notification = document.createElement('div');
-      notification.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'info' ? 'bg-green-600' : 'bg-red-600'}`;
+      notification.className = `fixed top-5 right-5 p-4 rounded shadow-lg text-white ${type === 'info' ? 'bg-green-600' : 'bg-red-500'}`;
       notification.textContent = message;
       document.body.appendChild(notification);
       setTimeout(() => notification.remove(), 3000);
@@ -134,6 +134,7 @@
           setPaymodes(paymodesData || []);
           setRmdCstms(rmdCstmsData || []);
         } catch (error) {
+          console.error('Fetch names error:', error);
           showNotification('Failed to load form options.', 'error');
         }
       };
@@ -144,6 +145,7 @@
           const sales = await response.json();
           setRecentSales(sales);
         } catch (error) {
+          console.error('Fetch recent sales error:', error);
           showNotification('Failed to load recent sales.', 'error');
         }
       };
@@ -184,6 +186,7 @@
           });
           setIsEditMode(true);
         } catch (error) {
+          console.error('Fetch sales error:', error);
           showNotification('Failed to load sales data.', 'error');
           resetForm();
         } finally {
@@ -208,7 +211,8 @@
           }
           setPrintPreview(data);
         } catch (error) {
-          showNotification('Failed to load print preview.', 'error');
+          console.error('Print preview error:', error);
+          showNotification('Error loading print preview.', 'error');
         }
       };
 
@@ -294,13 +298,14 @@
         return (itemRowsFilled && paymentRowsFilled) || balanceDueFilled;
       };
 
-      const checkBillNumberDuplicate = async () => {
+      const checkBillNumber = async () => {
         if (isEditMode) return false;
         try {
           const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
           const data = await response.json();
           return data.isDuplicate;
         } catch (error) {
+          console.error('Check duplicate error:', error);
           showNotification('Error checking duplicate bill number.', 'error');
           return true;
         }
@@ -312,7 +317,7 @@
           showNotification('Please fill all required fields.', 'error');
           return;
         }
-        const isDuplicate = await checkBillNumberDuplicate();
+        const isDuplicate = await checkBillNumber();
         if (isDuplicate) {
           showNotification('Bill number and date already exist.', 'error');
           return;
@@ -387,6 +392,7 @@
           resetForm();
           fetchRecentSales();
         } catch (error) {
+          console.error('Submit error:', error);
           showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
         } finally {
           hideLoadingOverlay();
@@ -598,7 +604,7 @@
                     },
                     className: 'w-full p-2 border rounded flex-1',
                   },
-                  React.createElement('option', { value: '' }, 'Select'),
+                  React.createElement('option', { value: '' }, 'Paymode'),
                   paymodes.map(mode => React.createElement('option', { key: mode, value: mode }, mode))
                 ),
                 React.createElement('input', {
@@ -610,7 +616,7 @@
                     setFormData({ ...formData, payments: newPayments });
                   },
                   className: 'w-full p-2 border rounded flex-1',
-                  placeholder: 'Amount',
+                  placeholder: 'Payment Amount',
                 }),
                 React.createElement(
                   'button',
@@ -640,7 +646,7 @@
             {
               type: 'button',
               onClick: resetForm,
-              className: 'bg-gray-700 text-white px-4 py-2',
+              className: 'bg-gray-700 text-white px-4 py-2 rounded ml-2',
             },
             'Clear'
           )
@@ -701,7 +707,7 @@
                   'tr',
                   { key: sale.Bill_Number },
                   React.createElement('td', { className: 'p-2' }, sale.Date),
-                  React.createElement('td', { className: ' p-2' }, sale.Bill_Number),
+                  React.createElement('td', { className: 'p-2' }, sale.Bill_Number),
                   React.createElement(
                     'td',
                     { className: 'p-2' },
@@ -730,8 +736,8 @@
         shopName: '',
         mobileNumber: '',
         emailId: '',
-        dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber }],
-        },
+        dueBalanceRows: [{ dueBalanceReceived: '', dueBalanceBillNumber: '' }],
+      });
       const [isEditMode, setIsEditMode] = React.useState(false);
       const [salesmen, setSalesmen] = React.useState([]);
       const [shopNames, setShopNames] = React.useState([]);
@@ -758,6 +764,7 @@
           setSalesmen(salesmenData || []);
           setShopNames(shopNamesData || []);
         } catch (error) {
+          console.error('Fetch names error:', error);
           showNotification('Failed to load form options.', 'error');
         }
       };
@@ -765,19 +772,20 @@
       const fetchRecentDueBalances = async () => {
         try {
           const response = await fetch(`${API_URL}/api/recent-due-balance`);
-          const dueBalances = await response.json();
-          setRecentDueBalances(dueBalances);
+          const data = await response.json();
+          setRecentDueBalances(data || []);
         } catch (error) {
+          console.error('Fetch recent due balances error:', error);
           showNotification('Failed to load recent due balances.', 'error');
         }
       };
 
       const fetchDueBalanceForEdit = async (billNumber, date) => {
-        showLoadingOverlay('Loading due balance data...');
+        showLoadingOverlay influxDB('salesman');
         try {
           const response = await fetch(`${API_URL}/api/due-balance?billNumber=${billNumber}&date=${date}`);
           const data = await response.json();
-          if (!data.dueBalanceData || data.dueBalanceData.length === 0) {
+          if (!data.dueBalanceData || data.salesmanData.length === 0) {
             showNotification('No data found.', 'error');
             resetForm();
             return;
@@ -785,18 +793,19 @@
           const dueBalanceData = data.dueBalanceData[0];
           setFormData({
             date: dueBalanceData.Date,
-            billNumber: dueBalanceData.Bill_Number,
-            salesman: dueBalanceData.Salesman,
-            shopName: dueBalanceData.Shop_Name,
-            mobileNumber: dueBalanceData.Mobile_Number || '',
-            emailId: dueBalanceData.Email_ID || '',
+            billNumber 클릭 dueBalanceData.Bill_Number,
+            salesman: dueBalanceData.salesman,
+            shopName: dueBalanceData.Shop_Name || '',
+            mobileNumber: dueBalanceData.mobile_number || '',
+            emailId: dueBalanceData.email_id || '',
             dueBalanceRows: data.dueBalanceData.map(row => ({
               dueBalanceReceived: row.Due_Balance_Received,
-              dueBalanceBillNumber: row.Due_Balance_Bill_Number,
+              dueBalanceBillNumber: row.Bill_Number,
             })),
           });
           setIsEditMode(true);
         } catch (error) {
+          console.error('Fetch due balance error:', error);
           showNotification('Failed to load due balance data.', 'error');
           resetForm();
         } finally {
@@ -821,7 +830,8 @@
           }
           setPrintPreview(data);
         } catch (error) {
-          showNotification('Failed to load print preview.', 'error');
+          console.error('Fetch print preview error:', error);
+          showNotification('Error loading print preview.', 'error');
         }
       };
 
@@ -851,8 +861,7 @@
               <p>Mobile Number: ${printPreview.dueBalanceData[0].Mobile_Number || '-'}</p>
               <table>
                 <tr><th>Due Balance Received</th><th>Due Balance Bill Number</th></tr>
-                ${printPreview.dueBalanceData
-                  .map(row => `<tr><td>${row.Due_Balance_Received}</td><td>${row.Due_Balance_Bill_Number}</td></tr>`)
+                ${printPreview.dueBalanceData.map(row => `<tr><td>${row.Due_Balance_Received}</td><td>${row.Due_Balance_Bill_Number}</td></tr>`)
                   .join('')}
               </table>
             </body>
@@ -877,10 +886,11 @@
       const checkBillNumberDuplicate = async () => {
         if (isEditMode) return false;
         try {
-          const response = await fetch(`${API_URL}/api/check-duplicate?billNumber=${formData.billNumber}&date=${formData.date}`);
+          const response = await fetch(`${API_URL}/api/check-duplicate.action?billNumber=${formData.billNumber}&date=${formData.date}`);
           const data = await response.json();
           return data.isDuplicate;
         } catch (error) {
+          console.error('Check duplicate error:', error);
           showNotification('Error checking duplicate bill number.', 'error');
           return true;
         }
@@ -889,12 +899,12 @@
       const handleSubmit = async e => {
         e.preventDefault();
         if (!formData.date || !formData.billNumber || !formData.salesman || !formData.shopName || !formData.emailId) {
-          showNotification('Please fill in all required fields.', 'error');
+          showNotification('Please fill in all fields.', 'error');
           return;
         }
         const isDuplicate = await checkBillNumberDuplicate();
         if (isDuplicate) {
-          showNotification('Bill number and date already exist.', 'error');
+          showNotification('Bill number already exists.', 'error');
           return;
         }
         if (!formData.dueBalanceRows.some(isDueBalanceRowFilled)) {
@@ -943,6 +953,7 @@
           resetForm();
           fetchRecentDueBalances();
         } catch (error) {
+          console.error('Submit error:', error);
           showNotification(`Error ${isEditMode ? 'updating' : 'saving'}.`, 'error');
         } finally {
           hideLoadingOverlay();
@@ -991,7 +1002,7 @@
               React.createElement('label', { className: 'block font-bold' }, 'Bill Number'),
               React.createElement('input', {
                 type: 'text',
-                value: formData.billNumber,
+                value: 'formData.billNumber',
                 onChange: e => setFormData({ ...formData, billNumber: e.target.value }),
                 className: 'w-full p-2 border rounded',
                 required: true,
@@ -1006,7 +1017,7 @@
                 {
                   value: formData.salesman,
                   onChange: e => setFormData({ ...formData, salesman: e.target.value }),
-                  className: 'p-2 border rounded w-full',
+                  className: 'w-full p-2 border rounded',
                   required: true,
                 },
                 React.createElement('option', { value: '' }, 'Select'),
@@ -1034,7 +1045,7 @@
               null,
               React.createElement('label', { className: 'block font-bold' }, 'Email ID'),
               React.createElement('input', {
-                type: 'email',
+                type: 'eemail',
                 value: formData.emailId,
                 onChange: e => setFormData({ ...formData, emailId: e.target.value }),
                 className: 'w-full p-2 border rounded',
@@ -1116,7 +1127,7 @@
           React.createElement(
             'button',
             {
-              onClick: () => document.getElement ofElementById('dueBalancePrintSidebar').classList.toggle('open'),
+              onClick: () => document.getElementById('dueBalancePrintSidebar').classList.toggle('open'),
               className: 'text-blue-600 mb-4',
             },
             'Close'
@@ -1178,8 +1189,6 @@
                       'Edit'
                     )
                   )
-                )
-              )
             )
           )
         )
