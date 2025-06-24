@@ -8,7 +8,7 @@ console.log('Initializing BigQuery client with:', {
 
 const bigqueryClient = new BigQuery({
   projectId: config.PROJECT_ID,
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || undefined,
 });
 
 async function executeQuery(query, params = []) {

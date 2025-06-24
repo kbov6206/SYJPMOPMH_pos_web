@@ -1,18 +1,20 @@
+# Use Node.js 18 base image
 FROM node:18
 
+# Set working directory
 WORKDIR /app
 
+# Copy package.json and package-lock.json
 COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
-COPY . .
+# Copy server files
+COPY server/ .
 
-ENV GOOGLE_CLOUD_PROJECT=myposdata
-ENV PORT=8080
-
+# Expose port 8080
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080/ || exit 1
-
-CMD ["npm", "start"]
+# Start the application
+CMD ["node", "index.js"]
