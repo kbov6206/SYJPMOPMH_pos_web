@@ -15,6 +15,7 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/', (req, res) => {
+  console.log('Health check accessed');
   res.json({ status: 'OK', message: 'SYJPMOPMH POS Web Backend' });
 });
 

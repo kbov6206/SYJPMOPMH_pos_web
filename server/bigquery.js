@@ -1,6 +1,11 @@
 const { BigQuery } = require('@google-cloud/bigquery');
 const config = require('./config');
 
+console.log('Initializing BigQuery client with:', {
+  projectId: config.PROJECT_ID,
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+});
+
 const bigqueryClient = new BigQuery({
   projectId: config.PROJECT_ID,
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
@@ -9,6 +14,7 @@ const bigqueryClient = new BigQuery({
 async function executeQuery(query, params = []) {
   const options = { query, params, location: config.LOCATION };
   try {
+    console.log('Executing query:', query, 'with params:', params);
     const [rows] = await bigqueryClient.query(options);
     return rows;
   } catch (error) {
@@ -75,6 +81,7 @@ async function checkDuplicateBillNumber(billNumber, date) {
 
 async function insertSalesData(salesData, balanceDueData, billNumbersData, paymentData) {
   try {
+    console.log('Inserting data:', { salesData, balanceDueData, billNumbersData, paymentData });
     await Promise.all([
       bigqueryClient.dataset(config.DATASET_ID).table('SalesData').insert(salesData),
       bigqueryClient.dataset(config.DATASET_ID).table('Balance_Due').insert(balanceDueData),
