@@ -1,114 +1,136 @@
 const express = require('express');
 const cors = require('cors');
-const { BigQuery } = require('@google-cloud/bigquery');
-const path = require('path');
+const bigquery = require('./bigquery');
 
 const app = express();
-const port = process.env.PORT || 8080;
 
-// Configure BigQuery client
-const bigquery = new BigQuery({
-  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'myposdata',
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
-
-// Middleware
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
-
-// CORS configuration
+// Enable CORS for the GitHub Pages origin
 app.use(cors({
   origin: 'https://kbov6206.github.io',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT'],
+  methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
 
-// Utility function to execute BigQuery queries
-async function executeQuery(query, parameters = []) {
-  try {
-    const [rows] = await bigquery.query({ query, params: parameters });
-    return rows;
-  } catch (error) {
-    console.error('BigQuery error:', error);
-    throw error;
-  }
-}
+app.use(express.json());
 
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({ status: 'OK', message: 'SYJPMOPMH POS Web Backend' });
 });
 
-// Fetch recent sales
-app.get('/api/recent-sales', async (req, res) => {
-  try {
-    const query = `
-      SELECT Bill_Number, Date, Salesman, Shop_Name, Department, Mobile_Number, Total_Amount
-      FROM \`myposdata.my_database.SalesData\`
-      ORDER BY Date DESC
-      LIMIT 10
-    `;
-    const rows = await executeQuery(query);
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching recent sales:', error);
-    res.status(500).json({ error: 'Failed to fetch recent sales' });
-  }
-});
-
-// Fetch dropdown options (names)
+// API endpoints
 app.get('/api/names', async (req, res) => {
   try {
-    const query = `
-      SELECT DISTINCT
-        (SELECT ARRAY_AGG(DISTINCT Item_Name) FROM \`myposdata.my_database.Items\`) AS items,
-        (SELECT ARRAY_AGG(DISTINCT Salesman) FROM \`myposdata.my_database.NamesForSale\`) AS salesmen,
-        (SELECT ARRAY_AGG(DISTINCT Paymode) FROM \`myposdata.my_database.Paymode\`) AS paymodes,
-        (SELECT ARRAY_AGG(DISTINCT Shop_Name) FROM \`myposdata.my_database.SalesShopName\`) AS shop_names,
-        (SELECT ARRAY_AGG(DISTINCT Department) FROM \`myposdata.my_database.SalesDepartment\`) AS departments,
-        (SELECT ARRAY_AGG(DISTINCT RCD_CSTM) FROM \`myposdata.my_database.SalesmenRmdCstm\`) AS rmd_cstm
-    `;
-    const [rows] = await executeQuery(query);
-    res.json(rows[0]);
+    const [salesmen, shopNames, items, paymodes, rmdCstm] = await Promise.all([
+      bigquery.getSalesmen(),
+      bigquery.getShopNames(),
+      bigquery.getItems(),
+      bigquery.getPaymodes(),
+      bigquery.getRmdCstm(),
+    ]);
+    res.json({ salesmen, shopNames, items, paymodes, rmdCstm });
   } catch (error) {
     console.error('Error fetching names:', error);
     res.status(500).json({ error: 'Failed to fetch names' });
   }
 });
 
-// Fetch recent due balances
-app.get('/api/recent-due-balances', async (req, res) => {
+app.get('/api/recent-sales', async (req, res) => {
   try {
-    const query = `
-      SELECT Bill_Number, Balance_Due, Due_Balance_Received
-      FROM \`myposdata.my_database.Balance_Due\`
-      WHERE Balance_Due > Due_Balance_Received
-      ORDER BY Date DESC
-      LIMIT 10
-    `;
-    const rows = await executeQuery(query);
-    res.json(rows);
+    const sales = await bigquery.getRecentSales();
+    res.json(sales);
   } catch (error) {
-    console.error('Error fetching due balances:', error);
-    res.status(500).json({ error: 'Failed to fetch due balances' });
+    console.error('Error fetching recent sales:', error);
+    res.status(500).json({ error: 'Failed to fetch recent sales' });
   }
 });
 
-// Save sales data (example endpoint)
+app.get('/api/recent-due-balances', async (req, res) => {
+  try {
+    const balances = await bigquery.getRecentDueBalance();
+    res.json(balances);
+  } catch (error) {
+    console.error('Error fetching recent due balances:', error);
+    res.status(500).json({ error: 'Failed to fetch recent due balances' });
+  }
+});
+
 app.post('/api/save-sales', async (req, res) => {
   try {
-    const formData = req.body;
-    // Implement save logic similar to bigquerySales.js:saveSalesData
-    // Example: Insert into SalesData, PaymentData, Balance_Due
-    res.json({ status: 'success', message: 'Sales data saved' });
+    const { date, billNumber, salesman, shopName, department, mobileNumber, items, payments, dueBalanceReceived, dueBalanceBillNumber } = req.body;
+
+    // Validate required fields
+    if (!date || !billNumber || !salesman || !shopName || !department || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check for duplicate bill number
+    const { isDuplicate } = await bigquery.checkDuplicateBillNumber(billNumber, date);
+    if (isDuplicate) {
+      return res.status(400).json({ error: 'Bill number already exists for this date' });
+    }
+
+    // Prepare data for insertion
+    const timestamp = new Date().toISOString();
+    const salesData = items.map(item => ({
+      SaleData_ID: `${billNumber}_${Date.now()}`,
+      Date: date,
+      Bill_Number: billNumber,
+      Salesman: salesman,
+      Shop_Name: shopName,
+      Department: department,
+      Mobile_Number: mobileNumber || null,
+      Item: item.item,
+      Amount: parseFloat(item.amount),
+      RMD_CSTM: item.rmdCstm || null,
+      Paymode: null,
+      Amount_Received: 0,
+      Balance_Due: 0,
+      Delivery_Date: date,
+      Timestamp: timestamp,
+      Email_ID: 'reachadeel@gmail.com',
+      Timestamp_New: timestamp,
+    }));
+
+    const paymentData = payments.map(payment => ({
+      PaymentData_ID: `${billNumber}_${Date.now()}`,
+      Date: date,
+      Bill_Number: billNumber,
+      Amount_Received: parseFloat(payment.amountReceived),
+      Paymode: payment.paymode,
+      Timestamp: timestamp,
+    }));
+
+    const billNumbersData = [{
+      Bill_Number: billNumber,
+      Date: date,
+    }];
+
+    const balanceDueData = [{
+      BalanceDue_ID: `${billNumber}_${Date.now()}`,
+      Date: date,
+      Bill_Number: billNumber,
+      Salesman: salesman,
+      Shop_Name: shopName,
+      Department: department,
+      Mobile_Number: mobileNumber || null,
+      Due_Balance_Received: dueBalanceReceived ? String(dueBalanceReceived) : '0',
+      Due_Balance_Bill_Number: dueBalanceBillNumber || null,
+      Timestamp: timestamp,
+      Email_ID: 'reachadeel@gmail.com',
+      Timestamp_New: timestamp,
+    }];
+
+    // Insert data into BigQuery
+    await bigquery.insertSalesData(salesData, balanceDueData, billNumbersData, paymentData);
+    res.json({ message: 'Sales data saved successfully' });
   } catch (error) {
-    console.error('Error saving sales:', error);
+    console.error('Error saving sales data:', error);
     res.status(500).json({ error: 'Failed to save sales data' });
   }
 });
 
-// Start server
+const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

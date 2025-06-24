@@ -3,293 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYJPMOPMH POS Web</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .row { display: flex; gap: 10px; margin-bottom: 10px; }
-    button { padding: 5px 10px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-  </style>
+  <title>SYJPMOPMH POS</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
-  <h1>SYJPMOPMH POS Web</h1>
-  <form id="salesForm">
-    <div class="form-group">
-      <label for="salesDate">Date:</label>
-      <input type="text" id="salesDate" required>
-    </div>
-    <div class="form-group">
-      <label for="salesBillNumber">Bill Number:</label>
-      <input type="text" id="salesBillNumber" required>
-    </div>
-    <div class="form-group">
-      <label for="salesSalesman">Salesman:</label>
-      <select id="salesSalesman" required></select>
-    </div>
-    <div class="form-group">
-      <label for="salesShopName">Shop Name:</label>
-      <select id="salesShopName" required></select>
-    </div>
-    <div class="form-group">
-      <label for="salesDepartment">Department:</label>
-      <select id="salesDepartment" required></select>
-    </div>
-    <div class="form-group">
-      <label for="salesMobileNumber">Mobile Number:</label>
-      <input type="text" id="salesMobileNumber" pattern="[0-9]{10}" required>
-    </div>
-    <h3>Items</h3>
-    <div id="salesRows"></div>
-    <button type="button" id="salesAddItemRowBtn">Add Item Row</button>
-    <h3>Payments</h3>
-    <div id="salesPaymentRows"></div>
-    <button type="button" id="salesAddPaymentRowBtn">Add Payment Row</button>
-    <div class="form-group">
-      <label for="salesDueBalanceReceived">Due Balance Received:</label>
-      <input type="number" id="salesDueBalanceReceived" min="0">
-    </div>
-    <div class="form-group">
-      <label for="salesDueBalanceBillNumber">Due Balance Bill Number:</label>
-      <select id="salesDueBalanceBillNumber"></select>
-    </div>
-    <div class="form-group">
-      <label for="salesBalanceDue">Balance Due:</label>
-      <input type="number" id="salesBalanceDue" readonly>
-    </div>
-    <div class="form-group">
-      <label for="salesTotalAmount">Total Amount:</label>
-      <span id="salesTotalAmount">0</span>
-    </div>
-    <div class="form-group">
-      <label for="salesAmountReceived">Amount Received:</label>
-      <span id="salesAmountReceived">0</span>
-    </div>
-    <button type="submit" id="salesSubmitBtn">Submit</button>
-    <button type="button" id="salesResetBtn">Reset</button>
-  </form>
-  <h2>Recent Sales</h2>
-  <table id="salesRecentTable">
-    <thead>
-      <tr>
-        <th>Bill Number</th>
-        <th>Date</th>
-        <th>Salesman</th>
-        <th>Shop Name</th>
-        <th>Department</th>
-        <th>Mobile Number</th>
-        <th>Total Amount</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script>
     const BASE_URL = 'https://sy-jpm-pos-web-385936458000.us-central1.run.app';
 
-    // Initialize Flatpickr
-    flatpickr('#salesDate', { dateFormat: 'Y-m-d' });
-
-    // Fetch dropdown options
+    // Fetch names for dropdowns
     async function fetchNames() {
       try {
-        const response = await fetch(`${BASE_URL}/api/names`);
+        const response = await fetch(`${BASE_URL}/api/names`, { method: 'GET' });
         if (!response.ok) throw new Error('Failed to fetch names');
         const data = await response.json();
-        populateDropdown('salesSalesman', data.salesmen);
-        populateDropdown('salesShopName', data.shop_names);
-        populateDropdown('salesDepartment', data.departments);
-        populateItemRows(data.items, data.rmd_cstm);
-        populatePaymentRows(data.paymodes);
+        console.log('Names:', data);
+        // Update dropdowns (salesSalesman, salesShopName, etc.)
       } catch (error) {
-        console.error('Error fetching names:', error);
+        console.error('Fetch names error:', error);
       }
-    }
-
-    // Populate dropdown
-    function populateDropdown(id, options) {
-      const select = document.getElementById(id);
-      select.innerHTML = '<option value="">Select</option>';
-      options.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option;
-        opt.textContent = option;
-        select.appendChild(opt);
-      });
-    }
-
-    // Add item row
-    function addItemRow(items, rmdCstm) {
-      const div = document.createElement('div');
-      div.className = 'row';
-      div.innerHTML = `
-        <select class="item-select">
-          <option value="">Select Item</option>
-          ${items.map(item => `<option value="${item}">${item}</option>`).join('')}
-        </select>
-        <input type="number" class="amount-input" min="0" placeholder="Amount">
-        <select class="rmd-cstm-select">
-          <option value="">Select RMD/CSTM</option>
-          ${rmdCstm.map(rc => `<option value="${rc}">${rc}</option>`).join('')}
-        </select>
-        <button type="button" onclick="this.parentNode.remove(); updateTotal()">Remove</button>
-      `;
-      document.getElementById('salesRows').appendChild(div);
-    }
-
-    // Add payment row
-    function addPaymentRow(paymodes) {
-      const div = document.createElement('div');
-      div.className = 'row';
-      div.innerHTML = `
-        <select class="paymode-select">
-          <option value="">Select Paymode</option>
-          ${paymodes.map(pm => `<option value="${pm}">${pm}</option>`).join('')}
-        </select>
-        <input type="number" class="amount-received-input" min="0" placeholder="Amount Received">
-        <button type="button" onclick="this.parentNode.remove(); updateTotal()">Remove</button>
-      `;
-      document.getElementById('salesPaymentRows').appendChild(div);
-    }
-
-    // Populate item and payment rows
-    let itemOptions = [], rmdCstmOptions = [], paymodeOptions = [];
-    function populateItemRows(items, rmdCstm) {
-      itemOptions = items;
-      rmdCstmOptions = rmdCstm;
-      addItemRow(items, rmdCstm);
-    }
-    function populatePaymentRows(paymodes) {
-      paymodeOptions = paymodes;
-      addPaymentRow(paymodes);
-    }
-
-    // Update totals
-    function updateTotal() {
-      let totalAmount = 0;
-      document.querySelectorAll('.amount-input').forEach(input => {
-        totalAmount += Number(input.value) || 0;
-      });
-      document.getElementById('salesTotalAmount').textContent = totalAmount;
-
-      let amountReceived = 0;
-      document.querySelectorAll('.amount-received-input').forEach(input => {
-        amountReceived += Number(input.value) || 0;
-      });
-      document.getElementById('salesAmountReceived').textContent = amountReceived;
-
-      const dueBalanceReceived = Number(document.getElementById('salesDueBalanceReceived').value) || 0;
-      document.getElementById('salesBalanceDue').value = totalAmount - amountReceived - dueBalanceReceived;
     }
 
     // Fetch recent sales
     async function fetchRecentSales() {
       try {
-        const response = await fetch(`${BASE_URL}/api/recent-sales`);
+        const response = await fetch(`${BASE_URL}/api/recent-sales`, { method: 'GET' });
         if (!response.ok) throw new Error('Failed to fetch recent sales');
         const data = await response.json();
-        const tbody = document.querySelector('#salesRecentTable tbody');
-        tbody.innerHTML = '';
-        data.forEach(row => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${row.Bill_Number}</td>
-            <td>${row.Date}</td>
-            <td>${row.Salesman}</td>
-            <td>${row.Shop_Name}</td>
-            <td>${row.Department}</td>
-            <td>${row.Mobile_Number}</td>
-            <td>${row.Total_Amount}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        console.log('Recent Sales:', data);
+        // Update sales table
       } catch (error) {
-        console.error('Error fetching recent sales:', error);
+        console.error('Fetch recent sales error:', error);
       }
     }
 
     // Fetch recent due balances
     async function fetchRecentDueBalances() {
       try {
-        const response = await fetch(`${BASE_URL}/api/recent-due-balances`);
-        if (!response.ok) throw new Error('Failed to fetch due balances');
+        const response = await fetch(`${BASE_URL}/api/recent-due-balances`, { method: 'GET' });
+        if (!response.ok) throw new Error('Failed to fetch recent due balances');
         const data = await response.json();
-        const select = document.getElementById('salesDueBalanceBillNumber');
-        select.innerHTML = '<option value="">Select Bill Number</option>';
-        data.forEach(row => {
-          const opt = document.createElement('option');
-          opt.value = row.Bill_Number;
-          opt.textContent = `${row.Bill_Number} (Due: ${row.Balance_Due})`;
-          select.appendChild(opt);
-        });
+        console.log('Recent Due Balances:', data);
+        // Update due balance dropdown
       } catch (error) {
-        console.error('Error fetching due balances:', error);
+        console.error('Fetch recent due balances error:', error);
       }
     }
 
-    // Form submission
-    document.getElementById('salesForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = {
-        date: document.getElementById('salesDate').value,
-        billNumber: document.getElementById('salesBillNumber').value,
-        salesman: document.getElementById('salesSalesman').value,
-        shopName: document.getElementById('salesShopName').value,
-        department: document.getElementById('salesDepartment').value,
-        mobileNumber: document.getElementById('salesMobileNumber').value,
-        items: Array.from(document.querySelectorAll('.item-select')).map((select, i) => ({
-          item: select.value,
-          amount: document.querySelectorAll('.amount-input')[i].value,
-          rmdCstm: document.querySelectorAll('.rmd-cstm-select')[i].value,
-        })),
-        payments: Array.from(document.querySelectorAll('.paymode-select')).map((select, i) => ({
-          paymode: select.value,
-          amountReceived: document.querySelectorAll('.amount-received-input')[i].value,
-        })),
-        dueBalanceReceived: document.getElementById('salesDueBalanceReceived').value,
-        dueBalanceBillNumber: document.getElementById('salesDueBalanceBillNumber').value,
-        balanceDue: document.getElementById('salesBalanceDue').value,
-      };
-
+    // Save sales data
+    async function saveSalesData(formData) {
       try {
         const response = await fetch(`${BASE_URL}/api/save-sales`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
-        if (!response.ok) throw new Error('Failed to save sales');
-        alert('Sales data saved successfully');
-        document.getElementById('salesResetBtn').click();
-        fetchRecentSales();
+        if (!response.ok) throw new Error('Failed to save sales data');
+        const data = await response.json();
+        console.log('Save Sales Response:', data);
+        // Handle success (e.g., show notification)
       } catch (error) {
-        console.error('Error saving sales:', error);
-        alert('Failed to save sales data');
+        console.error('Save sales error:', error);
+        // Handle error (e.g., show error notification)
       }
-    });
+    }
 
-    // Reset form
-    document.getElementById('salesResetBtn').addEventListener('click', () => {
-      document.getElementById('salesForm').reset();
-      document.getElementById('salesRows').innerHTML = '';
-      document.getElementById('salesPaymentRows').innerHTML = '';
-      addItemRow(itemOptions, rmdCstmOptions);
-      addPaymentRow(paymodeOptions);
-      updateTotal();
-    });
+    // Initialize the app
+    function init() {
+      fetchNames();
+      fetchRecentSales();
+      fetchRecentDueBalances();
+      // Add event listeners for form submission
+      // Example: document.getElementById('salesForm').addEventListener('submit', handleSubmit);
+    }
 
-    // Event listeners
-    document.getElementById('salesAddItemRowBtn').addEventListener('click', () => addItemRow(itemOptions, rmdCstmOptions));
-    document.getElementById('salesAddPaymentRowBtn').addEventListener('click', () => addPaymentRow(paymodeOptions));
-    document.getElementById('salesForm').addEventListener('input', updateTotal);
+    // React component (simplified example)
+    const App = () => {
+      React.useEffect(() => {
+        init();
+      }, []);
+      return React.createElement('div', null, 'SYJPMOPMH POS App');
+    };
 
-    // Initialize
-    fetchNames();
-    fetchRecentSales();
-    fetchRecentDueBalances();
+    ReactDOM.render(React.createElement(App), document.getElementById('root'));
   </script>
 </body>
 </html>
