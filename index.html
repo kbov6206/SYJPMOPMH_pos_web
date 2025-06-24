@@ -17,7 +17,7 @@
     async function fetchNames() {
       try {
         const response = await fetch(`${BASE_URL}/api/names`, { method: 'GET' });
-        if (!response.ok) throw new Error('Failed to fetch names');
+        if (!response.ok) throw new Error(`Failed to fetch names: ${response.status}`);
         const data = await response.json();
         console.log('Names:', data);
         // Update dropdowns (salesSalesman, salesShopName, etc.)
@@ -29,7 +29,7 @@
     async function fetchRecentSales() {
       try {
         const response = await fetch(`${BASE_URL}/api/recent-sales`, { method: 'GET' });
-        if (!response.ok) throw new Error('Failed to fetch recent sales');
+        if (!response.ok) throw new Error(`Failed to fetch recent sales: ${response.status}`);
         const data = await response.json();
         console.log('Recent Sales:', data);
         // Update sales table
@@ -41,7 +41,7 @@
     async function fetchRecentDueBalances() {
       try {
         const response = await fetch(`${BASE_URL}/api/recent-due-balances`, { method: 'GET' });
-        if (!response.ok) throw new Error('Failed to fetch recent due balances');
+        if (!response.ok) throw new Error(`Failed to fetch recent due balances: ${response.status}`);
         const data = await response.json();
         console.log('Recent Due Balances:', data);
         // Update due balance dropdown
@@ -57,7 +57,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
-        if (!response.ok) throw new Error('Failed to save sales data');
+        if (!response.ok) throw new Error(`Failed to save sales data: ${response.status}`);
         const data = await response.json();
         console.log('Save Sales Response:', data);
         // Handle success
