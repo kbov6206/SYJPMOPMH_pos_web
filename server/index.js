@@ -4,7 +4,7 @@ const bigquery = require('./bigquery');
 
 const app = express();
 
-// Enable CORS for the GitHub Pages origin
+// Enable CORS for GitHub Pages
 app.use(cors({
   origin: 'https://kbov6206.github.io',
   methods: ['GET', 'POST'],
@@ -31,7 +31,7 @@ app.get('/api/names', async (req, res) => {
     res.json({ salesmen, shopNames, items, paymodes, rmdCstm });
   } catch (error) {
     console.error('Error fetching names:', error);
-    res.status(500).json({ error: 'Failed to fetch names' });
+    res.status(500).json({ error: 'Failed to fetch names', details: error.message });
   }
 });
 
@@ -41,7 +41,7 @@ app.get('/api/recent-sales', async (req, res) => {
     res.json(sales);
   } catch (error) {
     console.error('Error fetching recent sales:', error);
-    res.status(500).json({ error: 'Failed to fetch recent sales' });
+    res.status(500).json({ error: 'Failed to fetch recent sales', details: error.message });
   }
 });
 
@@ -51,7 +51,7 @@ app.get('/api/recent-due-balances', async (req, res) => {
     res.json(balances);
   } catch (error) {
     console.error('Error fetching recent due balances:', error);
-    res.status(500).json({ error: 'Failed to fetch recent due balances' });
+    res.status(500).json({ error: 'Failed to fetch recent due balances', details: error.message });
   }
 });
 
@@ -126,7 +126,7 @@ app.post('/api/save-sales', async (req, res) => {
     res.json({ message: 'Sales data saved successfully' });
   } catch (error) {
     console.error('Error saving sales data:', error);
-    res.status(500).json({ error: 'Failed to save sales data' });
+    res.status(500).json({ error: 'Failed to save sales data', details: error.message });
   }
 });
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SYJPMOPMH POS</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/tailwind.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
@@ -14,7 +14,6 @@
   <script>
     const BASE_URL = 'https://sy-jpm-pos-web-385936458000.us-central1.run.app';
 
-    // Fetch names for dropdowns
     async function fetchNames() {
       try {
         const response = await fetch(`${BASE_URL}/api/names`, { method: 'GET' });
@@ -27,7 +26,6 @@
       }
     }
 
-    // Fetch recent sales
     async function fetchRecentSales() {
       try {
         const response = await fetch(`${BASE_URL}/api/recent-sales`, { method: 'GET' });
@@ -40,7 +38,6 @@
       }
     }
 
-    // Fetch recent due balances
     async function fetchRecentDueBalances() {
       try {
         const response = await fetch(`${BASE_URL}/api/recent-due-balances`, { method: 'GET' });
@@ -53,7 +50,6 @@
       }
     }
 
-    // Save sales data
     async function saveSalesData(formData) {
       try {
         const response = await fetch(`${BASE_URL}/api/save-sales`, {
@@ -64,28 +60,24 @@
         if (!response.ok) throw new Error('Failed to save sales data');
         const data = await response.json();
         console.log('Save Sales Response:', data);
-        // Handle success (e.g., show notification)
+        // Handle success
       } catch (error) {
         console.error('Save sales error:', error);
-        // Handle error (e.g., show error notification)
+        // Handle error
       }
     }
 
-    // Initialize the app
     function init() {
       fetchNames();
       fetchRecentSales();
       fetchRecentDueBalances();
-      // Add event listeners for form submission
-      // Example: document.getElementById('salesForm').addEventListener('submit', handleSubmit);
     }
 
-    // React component (simplified example)
     const App = () => {
       React.useEffect(() => {
         init();
       }, []);
-      return React.createElement('div', null, 'SYJPMOPMH POS App');
+      return React.createElement('div', { className: 'container mx-auto p-4' }, 'SYJPMOPMH POS App');
     };
 
     ReactDOM.render(React.createElement(App), document.getElementById('root'));
