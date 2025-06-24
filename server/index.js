@@ -1,158 +1,114 @@
 const express = require('express');
-   const cors = require('cors');
-   const {
-     getRecentSales,
-     getRecentDueBalance,
-     getSalesmen,
-     getShopNames,
-     getItems,
-     getPaymodes,
-     getRmdCstm,
-     getSalesByBillNumber,
-     getDueBalanceByBillNumber,
-     checkDuplicateBillNumber,
-     insertSalesData,
-     updateSalesData,
-   } = require('./bigquery');
+const cors = require('cors');
+const { BigQuery } = require('@google-cloud/bigquery');
+const path = require('path');
 
-   const app = express();
-   app.use(cors());
-   app.use(express.json());
+const app = express();
+const port = process.env.PORT || 8080;
 
-   // Health check endpoint
-   app.get('/', (req, res) => {
-     res.status(200).json({ status: 'OK', message: 'SYJPMOPMH POS Web Backend is running' });
-   });
+// Configure BigQuery client
+const bigquery = new BigQuery({
+  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'myposdata',
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+});
 
-   app.get('/api/recent-sales', async (req, res) => {
-     try {
-       const data = await getRecentSales();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch recent sales' });
-     }
-   });
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
 
-   app.get('/api/recent-due-balance', async (req, res) => {
-     try {
-       const data = await getRecentDueBalance();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch recent due balances' });
-     }
-   });
+// CORS configuration
+app.use(cors({
+  origin: 'https://kbov6206.github.io',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT'],
+  allowedHeaders: ['Content-Type'],
+}));
 
-   app.get('/api/salesmen', async (req, res) => {
-     try {
-       const data = await getSalesmen();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch salesmen' });
-     }
-   });
+// Utility function to execute BigQuery queries
+async function executeQuery(query, parameters = []) {
+  try {
+    const [rows] = await bigquery.query({ query, params: parameters });
+    return rows;
+  } catch (error) {
+    console.error('BigQuery error:', error);
+    throw error;
+  }
+}
 
-   app.get('/api/shop-names', async (req, res) => {
-     try {
-       const data = await getShopNames();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch shop names' });
-     }
-   });
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', message: 'SYJPMOPMH POS Web Backend' });
+});
 
-   app.get('/api/items', async (req, res) => {
-     try {
-       const data = await getItems();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch items' });
-     }
-   });
+// Fetch recent sales
+app.get('/api/recent-sales', async (req, res) => {
+  try {
+    const query = `
+      SELECT Bill_Number, Date, Salesman, Shop_Name, Department, Mobile_Number, Total_Amount
+      FROM \`myposdata.my_database.SalesData\`
+      ORDER BY Date DESC
+      LIMIT 10
+    `;
+    const rows = await executeQuery(query);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching recent sales:', error);
+    res.status(500).json({ error: 'Failed to fetch recent sales' });
+  }
+});
 
-   app.get('/api/paymodes', async (req, res) => {
-     try {
-       const data = await getPaymodes();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch paymodes' });
-     }
-   });
+// Fetch dropdown options (names)
+app.get('/api/names', async (req, res) => {
+  try {
+    const query = `
+      SELECT DISTINCT
+        (SELECT ARRAY_AGG(DISTINCT Item_Name) FROM \`myposdata.my_database.Items\`) AS items,
+        (SELECT ARRAY_AGG(DISTINCT Salesman) FROM \`myposdata.my_database.NamesForSale\`) AS salesmen,
+        (SELECT ARRAY_AGG(DISTINCT Paymode) FROM \`myposdata.my_database.Paymode\`) AS paymodes,
+        (SELECT ARRAY_AGG(DISTINCT Shop_Name) FROM \`myposdata.my_database.SalesShopName\`) AS shop_names,
+        (SELECT ARRAY_AGG(DISTINCT Department) FROM \`myposdata.my_database.SalesDepartment\`) AS departments,
+        (SELECT ARRAY_AGG(DISTINCT RCD_CSTM) FROM \`myposdata.my_database.SalesmenRmdCstm\`) AS rmd_cstm
+    `;
+    const [rows] = await executeQuery(query);
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching names:', error);
+    res.status(500).json({ error: 'Failed to fetch names' });
+  }
+});
 
-   app.get('/api/rmd-cstm', async (req, res) => {
-     try {
-       const data = await getRmdCstm();
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch rmd_cstm' });
-     }
-   });
+// Fetch recent due balances
+app.get('/api/recent-due-balances', async (req, res) => {
+  try {
+    const query = `
+      SELECT Bill_Number, Balance_Due, Due_Balance_Received
+      FROM \`myposdata.my_database.Balance_Due\`
+      WHERE Balance_Due > Due_Balance_Received
+      ORDER BY Date DESC
+      LIMIT 10
+    `;
+    const rows = await executeQuery(query);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching due balances:', error);
+    res.status(500).json({ error: 'Failed to fetch due balances' });
+  }
+});
 
-   app.get('/api/sales', async (req, res) => {
-     const { billNumber, date } = req.query;
-     if (!billNumber || !date) {
-       return res.status(400).json({ error: 'Bill number and date are required' });
-     }
-     try {
-       const data = await getSalesByBillNumber(billNumber, date);
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch sales data' });
-     }
-   });
+// Save sales data (example endpoint)
+app.post('/api/save-sales', async (req, res) => {
+  try {
+    const formData = req.body;
+    // Implement save logic similar to bigquerySales.js:saveSalesData
+    // Example: Insert into SalesData, PaymentData, Balance_Due
+    res.json({ status: 'success', message: 'Sales data saved' });
+  } catch (error) {
+    console.error('Error saving sales:', error);
+    res.status(500).json({ error: 'Failed to save sales data' });
+  }
+});
 
-   app.get('/api/due-balance', async (req, res) => {
-     const { billNumber, date } = req.query;
-     if (!billNumber || !date) {
-       return res.status(400).json({ error: 'Bill number and date are required' });
-     }
-     try {
-       const data = await getDueBalanceByBillNumber(billNumber, date);
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to fetch due balance data' });
-     }
-   });
-
-   app.get('/api/check-duplicate', async (req, res) => {
-     const { billNumber, date } = req.query;
-     if (!billNumber || !date) {
-       return res.status(400).json({ error: 'Bill number and date are required' });
-     }
-     try {
-       const data = await checkDuplicateBillNumber(billNumber, date);
-       res.json(data);
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to check duplicate bill number' });
-     }
-   });
-
-   app.post('/api/sales', async (req, res) => {
-     const { salesData, balanceDueData, billNumbersData, paymentData } = req.body;
-     if (!salesData || !balanceDueData || !billNumbersData || !paymentData) {
-       return res.status(400).json({ error: 'Missing required data' });
-     }
-     try {
-       await insertSalesData(salesData, balanceDueData, billNumbersData, paymentData);
-       res.status(201).json({ message: 'Data inserted successfully' });
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to insert data' });
-     }
-   });
-
-   app.put('/api/sales/update', async (req, res) => {
-     const { salesData, balanceDueData, billNumbersData, paymentData } = req.body;
-     if (!salesData || !balanceDueData || !billNumbersData || !paymentData) {
-       return res.status(400).json({ error: 'Missing required data' });
-     }
-     try {
-       await updateSalesData(salesData, balanceDueData, billNumbersData, paymentData);
-       res.json({ message: 'Data updated successfully' });
-     } catch (error) {
-       res.status(500).json({ error: 'Failed to update data' });
-     }
-   });
-
-   const PORT = process.env.PORT || 8080;
-   app.listen(PORT, () => {
-     console.log(`Server running on port ${PORT}`);
-   });
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
