@@ -109,13 +109,14 @@ async function getRecentEntries(table, userEmail, limit) {
       p.Amount_Received,
       p.Paymode,
       p.PaymentData_ID,
-      STRING_AGG(s.Item, ', ') AS Items
+      STRING_AGG(s.Item, ', ') AS Items,
+      MAX(p.Timestamp) AS Timestamp
     FROM \`${PROJECT_ID}.${DATASET_ID}.PaymentData\` p
     LEFT JOIN \`${PROJECT_ID}.${DATASET_ID}.SalesData\` s
       ON p.Bill_Number = s.Bill_Number AND p.Date = s.Date
-    WHERE p.Email_ID = @userEmail
+    WHERE s.Email_ID = @userEmail
     GROUP BY p.Date, p.Bill_Number, p.Amount_Received, p.Paymode, p.PaymentData_ID
-    ORDER BY p.Timestamp DESC
+    ORDER BY Timestamp DESC
     LIMIT @limit
   `;
   const params = [
@@ -583,7 +584,7 @@ functions.http('sales', async (req, res) => {
         return res.status(200).json(duplicateResult);
       case 'getRecentEntries':
         const recentEntries = await getRecentEntries(table, userEmail, limit || 20);
-        return res.status(200).json({ rows: recentEntries });
+        return res.status(200).json({ recentEntries });
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
