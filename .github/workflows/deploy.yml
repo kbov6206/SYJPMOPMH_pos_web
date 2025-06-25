@@ -1,34 +1,46 @@
-name: Deploy to Cloud Storage
+name: Deploy to Google Cloud Storage
+
 on:
-push:
- branches:
-   - main
+  push:
+    branches:
+      - main
+
 jobs:
-deploy:
- runs-on: ubuntu-latest
- steps:
-   - name: Checkout code
-     uses: actions/checkout@v3
-   - name: Authenticate to Google Cloud
-     uses: google-github-actions/auth@v1
-     with:
-       credentials_json: ${{ secrets.GCP_SA_KEY }}
-   - name: Set up Cloud SDK
-     uses: google-github-actions/setup-gcloud@v1
-     with:
-       project_id: myposdata
-   - name: Install Node.js
-     uses: actions/setup-node@v3
-     with:
-       node-version: '22'
-   - name: Install Dependencies
-     run: npm install
-   - name: Build JSX Files
-     run: npm run build
-   - name: Deploy to Cloud Storage
-     run: |
-       gsutil -m cp -r index.html lib styles.css tailwind.css favicon.ico dist gs://syjpmopmh-pos-web/
-       gsutil -m acl ch -r -u AllUsers:R gs://syjpmopmh-pos-web/
-       gsutil -m setmeta -h "Cache-Control:no-cache, max-age=0" gs://syjpmopmh-pos-web/dist/*.js
-       gsutil -m setmeta -h "Cache-Control:no-cache, max-age=0" gs://syjpmopmh-pos-web/index.html
-       gsutil web set -m index.html -e index.html gs://syjpmopmh-pos-web/
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build application
+      run: npm run build
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: \${{ secrets.GCP_SA_KEY }}
+
+    - name: Upload to Google Cloud Storage
+      uses: google-github-actions/upload-cloud-storage@v2
+      with:
+        path: .
+        destination: syjpmopmh-pos-web
+        glob: |
+          index.html
+          dist/*.js
+        headers: |
+          Cache-Control: no-cache, max-age=0
+
+    - name: Set public ACL
+      run: |
+        gsutil acl ch -u AllUsers:R gs://syjpmopmh-pos-web/index.html
+        gsutil acl ch -u AllUsers:R gs://syjpmopmh-pos-web/dist/app.js
+        gsutil acl ch -u AllUsers:R gs://syjpmopmh-pos-web/dist/dashboardSalesTable.js
