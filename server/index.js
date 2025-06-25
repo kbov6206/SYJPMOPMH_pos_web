@@ -1,7 +1,7 @@
 const functions = require('@google-cloud/functions-framework');
 const { BigQuery } = require('@google-cloud/bigquery');
 
-const PROJECT_ID = 'prod-123';
+const PROJECT_ID = 'myposdata';
 const DATASET_ID = 'my_database';
 const LOCATION = 'US';
 
@@ -478,10 +478,10 @@ async function getSalesDataByBillNumberAndDate(billNumber, date) {
 
 async function checkBillNumberDateDuplicate(billNumber, date) {
   const query = `
-            SELECT COUNT(*) as count
-            FROM \`${PROJECT_ID}.${DATASET_ID}.SalesData\`
-            WHERE Bill_Number = @billNumber AND Date = @date
-          `;
+    SELECT COUNT(*) as count
+    FROM \`${PROJECT_ID}.${DATASET_ID}.SalesData\`
+    WHERE Bill_Number = @billNumber AND Date = @date
+  `;
   const params = [
     { name: 'billNumber', parameterType: { type: 'STRING' }, parameterValue: { value: billNumber } },
     { name: 'date', parameterType: { type: 'DATE' }, parameterValue: { value: date } }

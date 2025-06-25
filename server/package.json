@@ -4,8 +4,8 @@
   "description": "Cloud Function for SYJPMOPMH POS",
   "main": "index.js",
   "dependencies": {
-    "@google-cloud/functions-framework": "^2.3.0",
-    "@google-cloud/bigquery": "^6.2.0"
+    "@google-cloud/functions-framework": "^3.4.2",
+    "@google-cloud/bigquery": "^7.1.0"
   },
   "engines": {
     "node": "18"
