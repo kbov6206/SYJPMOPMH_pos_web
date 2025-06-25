@@ -1,5 +1,4 @@
-node_modules
-npm-debug.log
-.DS_Store
-docs
-server/myposdata-bd64d235e28f.json
+node_modules/
+.env
+*.key
+*.pem
