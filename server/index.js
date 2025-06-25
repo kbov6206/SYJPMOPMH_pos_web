@@ -98,6 +98,34 @@ async function getLastBillNumber() {
   return result.rows && result.rows.length > 0 ? result.rows[0].Bill_Number : null;
 }
 
+async function getRecentEntries(table, userEmail, limit) {
+  if (!['SalesData', 'PaymentData'].includes(table)) {
+    throw new Error('Invalid table name');
+  }
+  const query = `
+    SELECT 
+      p.Date,
+      p.Bill_Number,
+      p.Amount_Received,
+      p.Paymode,
+      p.PaymentData_ID,
+      STRING_AGG(s.Item, ', ') AS Items
+    FROM \`${PROJECT_ID}.${DATASET_ID}.PaymentData\` p
+    LEFT JOIN \`${PROJECT_ID}.${DATASET_ID}.SalesData\` s
+      ON p.Bill_Number = s.Bill_Number AND p.Date = s.Date
+    WHERE p.Email_ID = @userEmail
+    GROUP BY p.Date, p.Bill_Number, p.Amount_Received, p.Paymode, p.PaymentData_ID
+    ORDER BY p.Timestamp DESC
+    LIMIT @limit
+  `;
+  const params = [
+    { name: 'userEmail', parameterType: { type: 'STRING' }, parameterValue: { value: userEmail } },
+    { name: 'limit', parameterType: { type: 'INT64' }, parameterValue: { value: limit } }
+  ];
+  const result = await executeQuery(query, params);
+  return result.rows || [];
+}
+
 async function saveSalesData(formData, userEmail) {
   const {
     date, billNumber, salesman, shopName, department, mobileNumber,
@@ -398,7 +426,7 @@ async function getNamesForSaleData() {
       executeQuery(paymodeQuery),
       executeQuery(shopNameQuery),
       executeQuery(departmentQuery),
-      executeQuery(rmdCstmQuery),
+      executeQuery(rmdCstmQuery)
     ]);
     const items = itemsResult.rows ? itemsResult.rows.map(row => row.Item).sort((a, b) => a.localeCompare(b)) : [];
     const salesmen = salesmenResult.rows ? salesmenResult.rows.map(row => row.Salesman).sort((a, b) => a.localeCompare(b)) : [];
@@ -443,7 +471,7 @@ async function getSalesDataByBillNumberAndDate(billNumber, date) {
   `;
   const params = [
     { name: 'billNumber', parameterType: { type: 'STRING' }, parameterValue: { value: billNumber } },
-    { name: 'date', parameterType: { type: 'DATE' }, parameterValue: { value: date } }
+    { name: 'date', parameterType: { type: 'STRING' }, parameterValue: { value: date } }
   ];
   try {
     const [salesResults, paymentResults] = await Promise.all([
@@ -484,7 +512,7 @@ async function checkBillNumberDateDuplicate(billNumber, date) {
   `;
   const params = [
     { name: 'billNumber', parameterType: { type: 'STRING' }, parameterValue: { value: billNumber } },
-    { name: 'date', parameterType: { type: 'DATE' }, parameterValue: { value: date } }
+    { name: 'date', parameterType: { type: 'STRING' }, parameterValue: { value: date } }
   ];
   const [rows] = await bigquery.query({ query, params });
   return { isDuplicate: rows && rows[0].count > 0 };
@@ -499,7 +527,7 @@ functions.http('sales', async (req, res) => {
     return res.status(200).send();
   }
 
-  const { action, email, password, data, billNumber, date, userEmail } = req.body;
+  const { action, email, password, data, billNumber, date, userEmail, table, limit } = req.body;
 
   try {
     if (action === 'authenticate') {
@@ -553,6 +581,9 @@ functions.http('sales', async (req, res) => {
       case 'checkBillNumberDateDuplicate':
         const duplicateResult = await checkBillNumberDateDuplicate(billNumber, date);
         return res.status(200).json(duplicateResult);
+      case 'getRecentEntries':
+        const recentEntries = await getRecentEntries(table, userEmail, limit || 20);
+        return res.status(200).json({ rows: recentEntries });
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
