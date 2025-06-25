@@ -1,16 +1,14 @@
 {
-  "name": "sales-function",
+  "name": "syjpmopmh-pos-web",
   "version": "1.0.0",
-  "description": "Cloud Function for SYJPMOPMH POS",
-  "main": "index.js",
-  "dependencies": {
-    "@google-cloud/functions-framework": "^2.3.0",
-    "@google-cloud/bigquery": "^6.2.0"
-  },
-  "engines": {
-    "node": "18"
-  },
+  "description": "SYJPMOPMH POS Web Application",
   "scripts": {
-    "start": "functions-framework --target=sales"
+    "build": "babel src/app.jsx -o dist/app.js && babel lib/dashboardSalesTable.js -o dist/dashboardSalesTable.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/cli": "^7.25.6",
+    "@babel/preset-react": "^7.24.7"
   }
 }
