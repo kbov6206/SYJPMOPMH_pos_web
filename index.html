@@ -216,7 +216,49 @@
         setCurrentBillNumber(billNumber);
         setCurrentDate(date);
         setFormData(prev => ({ ...prev, billNumber, date }));
-        // Fetch existing data for editing (implement as needed)
+        // Fetch existing data for editing
+        fetchSalesData(billNumber, date);
+      };
+
+      const fetchSalesData = async (billNumber, date) => {
+        setIsLoading(true);
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getSalesDataByBillNumberAndDate', billNumber, date, userEmail })
+          });
+          const result = await response.json();
+          if (result.error) throw new Error(result.error);
+          const { salesData, paymentData } = result;
+          if (salesData && salesData.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              salesman: salesData[0].Salesman || '',
+              shopName: salesData[0].Shop_Name || '',
+              department: salesData[0].Department || '',
+              mobileNumber: salesData[0].Mobile_Number || '',
+              dueBalanceReceived: salesData[0].Due_Balance_Received || '',
+              dueBalanceBillNumber: salesData[0].Due_Balance_Bill_Number || '',
+              balanceDue: salesData[0].Balance_Due || '',
+              deliveryDate: salesData[0].Delivery_Date || ''
+            }));
+            setSalesRows(salesData.map(row => ({
+              item: row.Item || '',
+              amount: row.Amount || '',
+              rmdCstm: row.RMD_CSTM || ''
+            })));
+            setSalesPaymentRows(paymentData.map(row => ({
+              paymode: row.Paymode || '',
+              amountReceived: row.Amount_Received || ''
+            })));
+            updateTotal();
+          }
+        } catch (error) {
+          showNotification(`Error fetching sales data: ${error.message}`, 'error');
+        } finally {
+          setIsLoading(false);
+        }
       };
 
       useEffect(() => {
@@ -248,7 +290,7 @@
         addPaymentRow();
       }, []);
 
-      const fetchNames = async (preserveValues = {}) => {
+      const fetchNames = async () => {
         setIsLoading(true);
         try {
           const response = await fetch(API_URL, {
@@ -504,7 +546,7 @@
           <form id="salesForm" onSubmit={e => e.preventDefault()}>
             <div className="static-row">
               <div>
-                <label htmlFor="salesDate" className="block">Date</label>
+                <label htmlFor="salesDate" className="block mb-1">Date</label>
                 <input
                   type="text"
                   id="salesDate"
@@ -512,11 +554,11 @@
                   value={formData.date}
                   onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
                   required
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label htmlFor="salesBillNumber" className="block">Bill Number</label>
+                <label htmlFor="salesBillNumber" className="block mb-1">Bill Number</label>
                 <input
                   type="text"
                   id="salesBillNumber"
@@ -531,19 +573,19 @@
                     }
                   }}
                   required
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
             <div className="static-row">
               <div>
-                <label htmlFor="salesSalesman" className="block">Salesman</label>
+                <label htmlFor="salesSalesman" className="block mb-1">Salesman</label>
                 <select
                   id="salesSalesman"
                   value={formData.salesman}
                   onChange={e => setFormData(prev => ({ ...prev, salesman: e.target.value }))}
                   required
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select</option>
                   {salesmen.map(salesman => (
@@ -552,13 +594,13 @@
                 </select>
               </div>
               <div>
-                <label htmlFor="salesShopName" className="block">Shop Name</label>
+                <label htmlFor="salesShopName" className="block mb-1">Shop Name</label>
                 <select
                   id="salesShopName"
                   value={formData.shopName}
                   onChange={e => setFormData(prev => ({ ...prev, shopName: e.target.value }))}
                   required
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select</option>
                   {shopNames.map(name => (
@@ -569,13 +611,13 @@
             </div>
             <div className="static-row">
               <div>
-                <label htmlFor="salesDepartment" className="block">Department</label>
+                <label htmlFor="salesDepartment" className="block mb-1">Department</label>
                 <select
                   id="salesDepartment"
                   value={formData.department}
                   onChange={e => setFormData(prev => ({ ...prev, department: e.target.value }))}
                   required
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select</option>
                   {departments.map(dept => (
@@ -584,7 +626,7 @@
                 </select>
               </div>
               <div>
-                <label htmlFor="salesMobileNumber" className="block">Mobile Number</label>
+                <label htmlFor="salesMobileNumber" className="block mb-1">Mobile Number</label>
                 <input
                   type="tel"
                   id="salesMobileNumber"
@@ -596,7 +638,7 @@
                       showNotification('Mobile number should be 10 digits long.', 'error');
                     }
                   }}
-                  className="border p-2 w-full"
+                  className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -612,7 +654,7 @@
                 <div key={index} className="dynamic-row">
                   <span style={{ minWidth: '50px' }}>Row {index + 1}</span>
                   <select
-                    className="sales-item-select border p-2"
+                    className="sales-item-select border p-2 rounded focus:ring-2 focus:ring-blue-500"
                     value={row.item}
                     onChange={e => updateRow(index, 'item', e.target.value)}
                     required
@@ -633,11 +675,11 @@
                     }}
                     onFocus={e => e.target.select()}
                     placeholder="Amount"
-                    className="border p-2"
+                    className="border p-2 rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                   <select
-                    className="sales-rmdcstm-select border p-2"
+                    className="sales-rmdcstm-select border p-2 rounded focus:ring-2 focus:ring-blue-500"
                     value={row.rmdCstm}
                     onChange={e => updateRow(index, 'rmdCstm', e.target.value)}
                     required
@@ -649,7 +691,7 @@
                   </select>
                   <button
                     type="button"
-                    className="sales-remove-row bg-red-500 text-white p-2 rounded"
+                    className="sales-remove-row bg-red-500 text-white p-2 rounded hover:bg-red-600"
                     onClick={() => removeRow(index)}
                   >
                     Remove
@@ -673,10 +715,9 @@
                 <span></span>
               </div>
               {salesPaymentRows.map((row, index) => (
-                <div key={index} className="row">
+                <div key={index} className="dynamic-row">
                   <span style={{ minWidth: '50px' }}>Payment {index + 1}</span>
                   <select
-                    style={{ flex: 1, minWidth: 120 }}
                     value={row.paymode}
                     onChange={e => updatePaymentRow(index, 'paymode', e.target.value)}
                     required
@@ -688,7 +729,6 @@
                     ))}
                   </select>
                   <input
-                    style={{ flex: 1, minWidth: 120 }}
                     type="number"
                     step="any"
                     value={row.amountReceived}
@@ -704,10 +744,10 @@
                   />
                   <button
                     type="button"
-                    className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+                    className="sales-remove-payment-row bg-red-500 text-white p-2 rounded hover:bg-red-600"
                     onClick={() => removePaymentRow(index)}
                   >
-                    Delete
+                    Remove
                   </button>
                 </div>
               ))}
@@ -733,7 +773,7 @@
                     updateTotal();
                   }}
                   onKeyDown={e => {
-                    const allowedKeys = ['0', '1', '2', '3', '4', '5', '7', '8', '9', '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                    const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
                     if (!allowedKeys.includes(e.key)) e.preventDefault();
                   }}
                   onFocus={e => e.target.select()}
