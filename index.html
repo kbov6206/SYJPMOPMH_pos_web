@@ -3,44 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYJPMOPMH POS - Sales</title>
-  <link rel="stylesheet" href="https://storage.googleapis.com/syjpmopmh-pos-web/lib/flatpickr.min.css">
-  <link rel="stylesheet" href="https://storage.googleapis.com/syjpmopmh-pos-web/tailwind.css">
-  <link rel="stylesheet" href="https://storage.googleapis.com/syjpmopmh-pos-web/styles.css">
-  <link rel="icon" href="https://storage.googleapis.com/syjpmopmh-pos-web/favicon.ico">
-  <style>
-    .module { padding: 1rem; }
-    .static-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
-    .static-row div { flex: 1; display: flex; flex-direction: column; }
-    .dynamic-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
-    .dynamic-row span { flex: 1; min-width: 120px; }
-    .dynamic-row select, .dynamic-row input { width: 100%; }
-    .totals { margin: 1rem 0; }
-    .print-sidebar { position: fixed; right: -400px; top: 0; width: 400px; height: 100%; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); transition: right 0.3s; padding: 1rem; }
-    .print-sidebar.open { right: 0; }
-    .table-container { margin-top: 1rem; }
-    .keyword-search { margin-bottom: 1rem; }
-    .invalid-field { border: 2px solid red; }
-    .notification { position: fixed; top: 1rem; right: 1rem; padding: 1rem; border-radius: 0.25rem; color: white; z-index: 1000; }
-    .notification.success { background: green; }
-    .notification.error { background: red; }
-    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: white; z-index: 999; }
-    .login-container { max-width: 400px; margin: 5rem auto; padding: 2rem; border: 1px solid #ccc; border-radius: 0.5rem; }
-    .sales-table { width: 100%; border-collapse: collapse; }
-    .sales-table th, .sales-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    .sales-table th { background-color: #f2f2f2; }
-    .date-row { background-color: #e6e6e6; font-weight: bold; }
-    .date-subtotal { background-color: #f9f9f9; font-weight: bold; }
-    .toggle-icon { cursor: pointer; margin-right: 5px; }
-  </style>
+  <title>SYJPMOPMH POS</title>
+  <link rel="stylesheet" href="tailwind.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="lib/flatpickr.min.css">
+  <link rel="icon" href="favicon.ico">
 </head>
 <body>
   <div id="root"></div>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/lib/react.production.min.js"></script>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/lib/react-dom.production.min.js"></script>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/lib/babel.min.js"></script>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/lib/flatpickr.min.js"></script>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/dist/dashboardSalesTable.js"></script>
-  <script src="https://storage.googleapis.com/syjpmopmh-pos-web/dist/app.js"></script>
+  <script src="lib/react.min.js"></script>
+  <script src="lib/react-dom.min.js"></script>
+  <script src="lib/flatpickr.min.js"></script>
+  <script>
+    window.API_URL = process.env.REACT_APP_API_URL || 'https://us-central1-myposdata.cloudfunctions.net/sales';
+  </script>
+  <script src="dist/dashboardSalesTable.js"></script>
+  <script src="dist/app.js"></script>
+  <script>
+    if (window.App) {
+      ReactDOM.render(React.createElement(window.App), document.getElementById('root'));
+    } else {
+      console.error('App component not found');
+    }
+  </script>
 </body>
 </html>

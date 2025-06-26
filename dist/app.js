@@ -1,13 +1,10 @@
+"use strict";
+
 const {
   useState,
   useEffect,
   useRef
 } = React;
-const {
-  SalesRecentTable,
-  SalesPrintPreview
-} = window;
-const API_URL = "https://us-central1-myposdata.cloudfunctions.net/sales";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState('');
@@ -26,7 +23,7 @@ function App() {
   const login = async (email, password) => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -69,7 +66,7 @@ function App() {
       type: ''
     }), 5000);
   };
-  if (!SalesRecentTable || !SalesPrintPreview) {
+  if (!window.SalesRecentTable || !window.SalesPrintPreview) {
     return React.createElement('div', null, 'Error: Required components not loaded.');
   }
   return React.createElement('div', null, notification.message && React.createElement('div', {
@@ -92,9 +89,10 @@ function App() {
     login
   }));
 }
-function LoginForm({
-  login
-}) {
+function LoginForm(_ref) {
+  let {
+    login
+  } = _ref;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const handleSubmit = e => {
@@ -106,7 +104,7 @@ function LoginForm({
   }, React.createElement('h2', {
     className: 'text-2xl font-bold mb-4'
   }, 'Login'), React.createElement('div', {
-    onSubmit: handleSubmit
+    className: 'form'
   }, React.createElement('div', {
     className: 'mb-4'
   }, React.createElement('label', {
@@ -138,12 +136,20 @@ function LoginForm({
     className: 'bg-blue-500 text-white p-2 rounded w-full'
   }, 'Login')));
 }
-function SalesForm({
-  userEmail,
-  showNotification
-}) {
-  const [salesRows, setSalesRows] = useState([]);
-  const [salesPaymentRows, setSalesPaymentRows] = useState([]);
+function SalesForm(_ref2) {
+  let {
+    userEmail,
+    showNotification
+  } = _ref2;
+  const [salesRows, setSalesRows] = useState([{
+    item: '',
+    amount: '',
+    rmdCstm: ''
+  }]);
+  const [salesPaymentRows, setSalesPaymentRows] = useState([{
+    paymode: '',
+    amountReceived: ''
+  }]);
   const [salesItems, setSalesItems] = useState([]);
   const [salesmen, setSalesmen] = useState([]);
   const [paymodes, setPaymodes] = useState([]);
@@ -185,20 +191,23 @@ function SalesForm({
   };
   const fetchSalesData = async (billNumber, date) => {
     setIsLoading(true);
+    const payload = {
+      action: 'getSalesDataByBillNumberAndDate',
+      billNumber,
+      date,
+      userEmail
+    };
+    console.log('fetchSalesData payload:', payload);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'getSalesDataByBillNumberAndDate',
-          billNumber,
-          date,
-          userEmail
-        })
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
+      console.log('fetchSalesData response:', result);
       if (result.error) throw new Error(result.error);
       const {
         salesData,
@@ -225,7 +234,6 @@ function SalesForm({
           paymode: row.Paymode || '',
           amountReceived: row.Amount_Received || ''
         })));
-        updateTotal();
       }
     } catch (error) {
       showNotification(`Error fetching sales data: ${error.message}`, 'error');
@@ -244,7 +252,6 @@ function SalesForm({
             date: dateStr
           }));
           setLastSalesDate(dateStr);
-          updateTotal();
         }
       });
     }
@@ -256,37 +263,37 @@ function SalesForm({
             ...prev,
             deliveryDate: dateStr
           }));
-          updateTotal();
         }
       });
     }
   }, [lastSalesDate]);
   useEffect(() => {
     fetchNames();
-    addRow();
-    addPaymentRow();
   }, []);
   const fetchNames = async () => {
     setIsLoading(true);
+    const payload = {
+      action: 'getNamesForSaleData',
+      userEmail
+    };
+    console.log('fetchNames payload:', payload);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'getNamesForSaleData',
-          userEmail
-        })
+        body: JSON.stringify(payload)
       });
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      setSalesItems(data.items || []);
-      setSalesmen(data.salesmen || []);
-      setPaymodes(data.paymodes || []);
-      setShopNames(data.shopNames || []);
-      setDepartments(data.departments || []);
-      setRmdCstms(data.rmdCstms || []);
+      const result = await response.json();
+      console.log('fetchNames response:', result);
+      if (result.error) throw new Error(result.error);
+      setSalesItems(result.items || []);
+      setSalesmen(result.salesmen || []);
+      setPaymodes(result.paymodes || []);
+      setShopNames(result.shopNames || []);
+      setDepartments(result.departments || []);
+      setRmdCstms(result.rmdCstms || []);
       updateDueBalanceBillNumbers();
     } catch (error) {
       showNotification('Failed to load sales data: ' + error.message, 'error');
@@ -296,20 +303,23 @@ function SalesForm({
   };
   const updateDueBalanceBillNumbers = async () => {
     setIsLoading(true);
+    const payload = {
+      action: 'getBillNumbersWithPendingBalance',
+      userEmail
+    };
+    console.log('updateDueBalanceBillNumbers payload:', payload);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'getBillNumbersWithPendingBalance',
-          userEmail
-        })
+        body: JSON.stringify(payload)
       });
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      setBillNumbers(data || []);
+      const result = await response.json();
+      console.log('updateDueBalanceBillNumbers response:', result);
+      if (result.error) throw new Error(result.error);
+      setBillNumbers(result || []);
     } catch (error) {
       showNotification('Failed to load bill numbers: ' + error.message, 'error');
     } finally {
@@ -331,41 +341,50 @@ function SalesForm({
   };
   const removeRow = index => {
     setSalesRows(prev => prev.filter((_, i) => i !== index));
-    updateTotal();
   };
   const removePaymentRow = index => {
     setSalesPaymentRows(prev => prev.filter((_, i) => i !== index));
-    updateTotal();
   };
   const updateRow = (index, field, value) => {
     setSalesRows(prev => prev.map((row, i) => i === index ? {
       ...row,
       [field]: value
     } : row));
-    updateTotal();
   };
   const updatePaymentRow = (index, field, value) => {
+    console.log(`updatePaymentRow: index=${index}, field=${field}, value=${value}`);
     setSalesPaymentRows(prev => prev.map((row, i) => i === index ? {
       ...row,
       [field]: value
     } : row));
-    updateTotal();
   };
   const updateTotal = () => {
+    console.log('updateTotal called');
     let totalItems = 0;
     salesRows.forEach(row => {
-      if (row.amount) totalItems += Number(row.amount) || 0;
+      if (row.amount) {
+        const amount = parseFloat(row.amount);
+        if (!isNaN(amount)) totalItems += amount;
+      }
     });
-    const dueBalanceReceived = Number(formData.dueBalanceReceived) || 0;
-    const balanceDue = Number(formData.balanceDue) || 0;
+    const dueBalanceReceived = parseFloat(formData.dueBalanceReceived) || 0;
+    const balanceDue = parseFloat(formData.balanceDue) || 0;
     let totalReceived = 0;
     salesPaymentRows.forEach(row => {
-      if (row.amountReceived) totalReceived += Number(row.amountReceived) || 0;
+      if (row.amountReceived) {
+        const amount = parseFloat(row.amountReceived);
+        if (!isNaN(amount)) totalReceived += amount;
+      }
     });
-    const total = totalItems + dueBalanceReceived - balanceDue;
+    const total = parseFloat((totalItems + dueBalanceReceived - balanceDue).toFixed(2));
+    totalReceived = parseFloat(totalReceived.toFixed(2));
+    console.log(`Calculated: totalItems=${totalItems}, dueBalanceReceived=${dueBalanceReceived}, balanceDue=${balanceDue}, total=${total}, totalReceived=${totalReceived}`);
     setTotalAmount(total);
     setAmountReceived(totalReceived);
   };
+  useEffect(() => {
+    updateTotal();
+  }, [salesRows, salesPaymentRows, formData.dueBalanceReceived, formData.balanceDue]);
   const isItemRowFilled = row => {
     return row.item && salesItems.includes(row.item) && row.amount && row.rmdCstm && rmdCstms.includes(row.rmdCstm);
   };
@@ -376,7 +395,7 @@ function SalesForm({
     return formData.balanceDue && formData.deliveryDate;
   };
   const isPaymentRowFilled = row => {
-    const amount = Number(row.amountReceived);
+    const amount = parseFloat(row.amountReceived);
     return row.paymode && paymodes.includes(row.paymode) && !isNaN(amount) && amount > 0;
   };
   const isCombinationAFilled = () => {
@@ -395,20 +414,23 @@ function SalesForm({
     return salesRows.some(isItemRowFilled) && salesPaymentRows.some(isPaymentRowFilled);
   };
   const checkBillNumberDateDuplicate = async (billNumber, date) => {
+    const payload = {
+      action: 'checkBillNumberDateDuplicate',
+      billNumber,
+      date,
+      userEmail
+    };
+    console.log('checkBillNumberDateDuplicate payload:', payload);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'checkBillNumberDateDuplicate',
-          billNumber,
-          date,
-          userEmail
-        })
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
+      console.log('checkBillNumberDateDuplicate response:', result);
       if (result.error) throw new Error(result.error);
       return result.isDuplicate;
     } catch (error) {
@@ -428,12 +450,7 @@ function SalesForm({
         return;
       }
     }
-    const isValidCombination = isEditMode ? salesPaymentRows.some(isPaymentRowFilled) || isCombinationAFilled() || isCombinationBFilled() || isCombinationCFilled() || isCombinationDFilled() || isCombinationEFilled() : isCombinationAFilled() || isCombinationBFilled() || isCombinationCFilled() || isCombinationDFilled() || isCombinationEFilled();
-    if (!isValidCombination) {
-      showNotification('Please fill out one of the valid field combinations for submission.', 'error');
-      return;
-    }
-    if (salesRows.length > 0 && !isEditMode) {
+    if (!isEditMode) {
       const invalidRows = salesRows.reduce((acc, row, i) => {
         if (!isItemRowFilled(row)) acc.push(i + 1);
         return acc;
@@ -455,7 +472,7 @@ function SalesForm({
         return;
       }
     }
-    if (totalAmount !== amountReceived) {
+    if (Math.abs(totalAmount - amountReceived) > 0.01) {
       showNotification('Total Amount and Amount Received must be equal.', 'error');
       return;
     }
@@ -464,9 +481,10 @@ function SalesForm({
       data: salesRows.filter(isItemRowFilled),
       paymentData: salesPaymentRows.filter(isPaymentRowFilled)
     };
+    console.log('submit payload:', data);
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(window.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -478,6 +496,7 @@ function SalesForm({
         })
       });
       const result = await response.json();
+      console.log('submit response:', result);
       if (result.error) throw new Error(result.error);
       showNotification(`Sales data ${isEditMode ? 'updated' : 'saved'} successfully! Rows saved: ${result.rowsSaved}`, 'success');
       resetForm();
@@ -621,12 +640,12 @@ function SalesForm({
   }, 'Phone Number'), React.createElement('input', {
     type: 'tel',
     id: 'salesPhoneNumber',
-    value: formData.phoneNumber,
+    value: formData.mobileNumber,
     onChange: e => {
       const value = e.target.value.replace(/[^0-9]/g, '');
       setFormData(prev => ({
         ...prev,
-        phoneNumber: value
+        mobileNumber: value
       }));
       if (value.length > 0 && value.length !== 11) {
         showNotification('Phone number must be 11 digits long.', 'error');
@@ -744,7 +763,11 @@ function SalesForm({
     type: 'number',
     step: 'any',
     value: row.amountReceived,
-    onChange: e => updatePaymentRow(index, 'amountReceived', e.target.value),
+    onChange: e => {
+      const value = e.target.value;
+      console.log(`Amount Received input: ${value}`);
+      updatePaymentRow(index, 'amountReceived', value);
+    },
     onKeyDown: e => {
       const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', 'Backspace', 'Delete', '-', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
       if (!allowedKeys.includes(e.key)) e.preventDefault();
@@ -760,7 +783,7 @@ function SalesForm({
   }, 'Remove')))), React.createElement('button', {
     type: 'button',
     id: 'salesAddPaymentRow',
-    className: 'bg-blue-600 text-white p-2 rounded my-4 hover-bg-blue-700',
+    className: 'bg-blue-600 text-white p-2 rounded my-4 hover:bg-blue-700',
     onClick: addPaymentRow
   }, 'Add Payment Row'), React.createElement('div', {
     className: 'static-row'
@@ -777,7 +800,6 @@ function SalesForm({
         ...prev,
         dueBalanceReceived: e.target.value
       }));
-      updateTotal();
     },
     onKeyDown: e => {
       const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
@@ -786,17 +808,16 @@ function SalesForm({
     onFocus: e => e.target.select(),
     className: 'border p-2 rounded w-full focus:ring-blue-500'
   })), React.createElement('div', null, React.createElement('label', {
-    htmlFor: 'salesDueBalanceReceived',
+    htmlFor: 'salesDueBalanceBillNumber',
     className: 'block mb-1'
   }, 'Due Balance Bill Number'), React.createElement('select', {
-    id: 'salesDueBalanceDue',
+    id: 'salesDueBalanceBillNumber',
     value: formData.dueBalanceBillNumber,
     onChange: e => {
       setFormData(prev => ({
         ...prev,
         dueBalanceBillNumber: e.target.value
       }));
-      updateTotal();
     },
     className: 'border p-2 rounded w-full focus:ring-blue-500'
   }, React.createElement('option', {
@@ -819,7 +840,6 @@ function SalesForm({
         ...prev,
         balanceDue: e.target.value
       }));
-      updateTotal();
     },
     onKeyDown: e => {
       const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
@@ -843,7 +863,7 @@ function SalesForm({
   }))), React.createElement('button', {
     type: 'button',
     id: 'salesSubmit',
-    className: 'bg-green-500 text-white p-2 rounded w-full my-4 hover-bg-green-600',
+    className: 'bg-green-500 text-white p-2 rounded w-full my-4 hover:bg-green-600',
     onClick: submit
   }, isEditMode ? 'Update' : 'Submit'), React.createElement('div', {
     className: 'totals'
@@ -855,19 +875,23 @@ function SalesForm({
     className: 'font-bold'
   }, `Amount Received: ${amountReceived.toFixed(2)}`)), React.createElement('div', {
     className: 'table-container'
-  }, React.createElement(SalesRecentTable, {
+  }, React.createElement(window.SalesRecentTable, {
     userEmail,
     showNotification
   })), React.createElement('button', {
     type: 'button',
     id: 'salesPrintBtn',
-    className: 'bg-gray-500 text-white p-2 rounded my-4 hover-bg-gray-600',
-    onClick: () => document.getElementById('salesPrintSidebar').classNameList.toggle('open')
+    className: 'bg-gray-500 text-white p-2 rounded my-4 hover:bg-gray-600',
+    onClick: () => document.getElementById('salesPrintSidebar').classList.toggle('open')
   }, 'Print Preview'), React.createElement('div', {
     id: 'salesPrintSidebar',
     className: 'print-sidebar'
-  }, React.createElement(SalesPrintPreview, {
-    sales: userEmail,
+  }, React.createElement(window.SalesPrintPreview, {
+    sales: {
+      billNumber: formData.billNumber,
+      date: formData.date,
+      userEmail
+    },
     showNotification
   }), React.createElement('button', {
     id: 'salesPrint',
@@ -881,6 +905,4 @@ function SalesForm({
     }
   }, 'Print'))));
 }
-
-// Make App available globally for index.html
 window.App = App;

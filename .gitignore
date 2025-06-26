@@ -1,4 +1,7 @@
 node_modules/
+dist/
 .env
-*.key
-*.pem
+.DS_Store
+*.bak
+package-lock copy.json
+syjpmopmh-pos-web@1.0.0

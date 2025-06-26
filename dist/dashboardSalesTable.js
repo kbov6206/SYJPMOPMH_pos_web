@@ -1,90 +1,138 @@
-const API_URL = "https://us-central1-myposdata.cloudfunctions.net/sales";
-const SalesRecentTable = ({
-  userEmail,
-  showNotification
-}) => {
-  const [recentEntries, setRecentEntries] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  React.useEffect(() => {
-    const fetchRecentEntries = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            action: 'getRecentEntries',
-            table: 'PaymentData',
-            userEmail,
-            limit: 20
-          })
-        });
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        setRecentEntries(result.recentEntries || []);
-      } catch (error) {
-        showNotification(`Error fetching recent entries: ${error.message}`, 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchRecentEntries();
-  }, [userEmail]);
-  return React.createElement('div', {
-    className: 'table-container'
-  }, isLoading ? React.createElement('div', {
-    className: 'loading-overlay'
-  }, 'Loading recent entries...') : React.createElement('table', {
-    className: 'sales-table'
-  }, React.createElement('thead', null, React.createElement('tr', null, React.createElement('th', null, 'Date'), React.createElement('th', null, 'Bill Number'), React.createElement('th', null, 'Amount Received'), React.createElement('th', null, 'Paymode'), React.createElement('th', null, 'Items'), React.createElement('th', null, 'Timestamp'))), React.createElement('tbody', null, recentEntries.map(entry => React.createElement('tr', {
-    key: entry.PaymentData_ID,
-    onClick: () => window.salesFormInitialize(entry.Bill_Number, entry.Date)
-  }, React.createElement('td', null, entry.Date), React.createElement('td', null, entry.Bill_Number), React.createElement('td', null, entry.Amount_Received.toFixed(2)), React.createElement('td', null, entry.Paymode), React.createElement('td', null, entry.Items), React.createElement('td', null, new Date(entry.Timestamp).toLocaleString()))))));
+import React, { useState, useEffect } from 'react';
+
+const fetchPrintData = async (billNumber, date, userEmail, showNotification) => {
+  const payload = { action: 'getSalesDataByBillNumberAndDate', billNumber, date, userEmail };
+  console.log('fetchPrintData payload:', payload);
+  try {
+    const response = await fetch(window.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    console.log('fetchPrintData response:', result);
+    if (result.error) throw new Error(result.error);
+    return result;
+  } catch (error) {
+    showNotification('Error fetching print data: ' + error.message, 'error');
+    return null;
+  }
 };
-const SalesPrintPreview = ({
-  sales,
-  showNotification
-}) => {
-  const [salesData, setSalesData] = React.useState(null);
-  React.useEffect(() => {
-    const fetchSalesData = async () => {
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            action: 'getSalesDataByBillNumberAndDate',
-            billNumber: sales.billNumber,
-            date: sales.date,
-            userEmail: sales
-          })
-        });
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        setSalesData(result);
-      } catch (error) {
-        showNotification(`Error fetching print data: ${error.message}`, 'error');
-      }
+
+function SalesRecentTable({ userEmail, showNotification }) {
+  const [sales, setSales] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchSalesData = async () => {
+    setIsLoading(true);
+    const payload = { action: 'getRecentEntries', table: 'SalesData', userEmail, limit: 20 };
+    console.log('fetchSalesData payload:', payload);
+    try {
+      const response = await fetch(window.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      console.log('fetchSalesData response:', result);
+      if (result.error) throw new Error(result.error);
+      setSales(result.recentEntries || []);
+    } catch (error) {
+      showNotification('Error fetching sales data: ' + error.message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSalesData();
+  }, [userEmail]);
+
+  const initializeForm = (billNumber, date) => {
+    if (window.salesFormInitialize) {
+      window.salesFormInitialize(billNumber, date);
+    }
+  };
+
+  return React.createElement(
+    'div',
+    { className: 'table-container' },
+    isLoading && React.createElement('div', { className: 'loading-overlay' }, 'Loading sales data...'),
+    React.createElement(
+      'table',
+      { className: 'sales-table' },
+      React.createElement(
+        'thead',
+        null,
+        React.createElement(
+          'tr',
+          null,
+          React.createElement('th', null, 'Date'),
+          React.createElement('th', null, 'Bill Number'),
+          React.createElement('th', null, 'Shop'),
+          React.createElement('th', null, 'Salesman'),
+          React.createElement('th', null, 'Amount'),
+          React.createElement('th', null, 'Actions')
+        )
+      ),
+      React.createElement(
+        'tbody',
+        null,
+        sales.map((sale, index) => React.createElement(
+          'tr',
+          { key: index },
+          React.createElement('td', null, sale.Date ? sale.Date : 'Unknown'),
+          React.createElement('td', null, sale.Bill_Number),
+          React.createElement('td', null, sale.Shop_Name || 'Unknown'),
+          React.createElement('td', null, sale.Salesman || 'Unknown'),
+          React.createElement('td', null, sale.Total_Amount || 0),
+          React.createElement(
+            'td',
+            null,
+            React.createElement(
+              'button',
+              {
+                onClick: () => initializeForm(sale.Bill_Number, sale.Date),
+                className: 'bg-blue-500 text-white p-1 rounded mr-2'
+              },
+              'Edit'
+            )
+          )
+        ))
+      )
+    )
+  );
+}
+
+function SalesPrintPreview({ sales, showNotification }) {
+  const [printData, setPrintData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await fetchPrintData(sales.billNumber, sales.date, sales.userEmail, showNotification);
+      setPrintData(data);
     };
     if (sales.billNumber && sales.date) {
-      fetchSalesData();
+      fetchData();
     }
-  }, [sales]);
-  return React.createElement('div', {
-    id: 'salesPrintPreview'
-  }, salesData ? React.createElement('div', null, salesData, React.createElement('h3', null, 'Sales Receipt'), React.createElement('p', null, `Bill Number: ${salesData.salesData[0]?.Bill_Number || ''}`), React.createElement('p', null, `Date: ${salesData.salesData[0]?.Date || ''}`), React.createElement('p', null, `Salesman: ${salesData.salesData[0]?.Salesman || ''}`), React.createElement('p', null, `Shop Name: ${salesData.salesData[0]?.Shop_Name || ''}`), React.createElement('p', null, `Department: ${salesData.salesData[0]?.Department || ''}`), React.createElement('table', {
-    className: 'sales-table'
-  }, React.createElement('thead', null, React.createElement('tr', null, React.createElement('th', null, 'Item'), React.createElement('th', null, 'Amount'), React.createElement('th', null, 'RMD/CSTM'))), React.createElement('tbody', null, salesData.salesData.map(row => React.createElement('tr', {
-    key: row.Item
-  }, React.createElement('td', null, row.Item), React.createElement('td', null, row.Amount.toFixed(2)), React.createElement('td', null, row.RMD_CSTM))))), React.createElement('table', {
-    className: 'sales-table'
-  }, React.createElement('thead', null, React.createElement('tr', null, React.createElement('th', null, 'Paymode'), React.createElement('th', null, 'Amount Received'))), React.createElement('tbody', null, salesData.paymentData.map(row => React.createElement('tr', {
-    key: row.Paymode
-  }, React.createElement('td', null, row.Paymode), React.createElement('td', null, row.Amount_Received.toFixed(2))))))) : React.createElement('div', null, 'Select a bill to preview'));
-};
+  }, [sales.billNumber, sales.date, sales.userEmail]);
+
+  return React.createElement(
+    'div',
+    { id: 'salesPrintPreview', className: 'print-preview' },
+    printData ? React.createElement(
+      'div',
+      null,
+      React.createElement('h3', null, 'Sales Receipt'),
+      React.createElement('p', null, `Bill Number: ${printData.billNumber}`),
+      React.createElement('p', null, `Date: ${printData.date}`),
+      React.createElement('p', null, `Shop: ${printData.salesData[0]?.Shop_Name || 'Unknown'}`),
+      React.createElement('p', null, `Salesman: ${printData.salesData[0]?.Salesman || 'Unknown'}`)
+    ) : React.createElement('div', null, 'No data available')
+  );
+}
+
 window.SalesRecentTable = SalesRecentTable;
 window.SalesPrintPreview = SalesPrintPreview;
+
+export default SalesRecentTable;

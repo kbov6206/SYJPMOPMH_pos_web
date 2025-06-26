@@ -12,7 +12,7 @@ function serializeDates(obj, seen = new WeakSet()) {
     if (seen.has(obj)) return null;
     seen.add(obj);
   }
-  if (obj instanceof Date) return obj.toISOString();
+  if (obj instanceof Date) return obj.toISOString().split('T')[0]; // Convert to YYYY-MM-DD for DATE type
   if (Array.isArray(obj)) return obj.map(item => serializeDates(item, seen));
   if (typeof obj === 'object' && obj !== null) {
     const result = {};
@@ -22,7 +22,7 @@ function serializeDates(obj, seen = new WeakSet()) {
           result[key] = obj[key].value;
         } else if ('s' in obj[key] && 'e' in obj[key] && 'c' in obj[key]) {
           const decimal = obj[key];
-          if (key === 'Amount_Received' || key === 'Amount' || key === 'Amount_Paid' || key === 'Balance_Due' || key === 'Due_Balance_Received') {
+          if (key === 'Amount_Received' || key === 'Amount' || key === 'Balance_Due' || key === 'Due_Balance_Received') {
             const sign = decimal.s || 1;
             const exponent = decimal.e || 0;
             const coefficient = decimal.c ? parseInt(decimal.c.join('')) : 0;
@@ -110,12 +110,15 @@ async function getRecentEntries(table, userEmail, limit) {
       p.Paymode,
       p.PaymentData_ID,
       STRING_AGG(s.Item, ', ') AS Items,
-      MAX(p.Timestamp) AS Timestamp
+      MAX(p.Timestamp) AS Timestamp,
+      s.Shop_Name,
+      s.Salesman,
+      SUM(s.Amount) AS Total_Amount
     FROM \`${PROJECT_ID}.${DATASET_ID}.PaymentData\` p
     LEFT JOIN \`${PROJECT_ID}.${DATASET_ID}.SalesData\` s
       ON p.Bill_Number = s.Bill_Number AND p.Date = s.Date
     WHERE s.Email_ID = @userEmail
-    GROUP BY p.Date, p.Bill_Number, p.Amount_Received, p.Paymode, p.PaymentData_ID
+    GROUP BY p.Date, p.Bill_Number, p.Amount_Received, p.Paymode, p.PaymentData_ID, s.Shop_Name, s.Salesman
     ORDER BY Timestamp DESC
     LIMIT @limit
   `;
@@ -149,7 +152,7 @@ async function saveSalesData(formData, userEmail) {
     });
   }
   const calculatedTotal = totalItems + Number(dueBalanceReceived || 0) - Number(balanceDue || 0);
-  if (totalAmountReceived !== calculatedTotal) {
+  if (Math.abs(totalAmountReceived - calculatedTotal) > 0.01) {
     throw new Error(`Amount Received (${totalAmountReceived}) does not match calculated value (${calculatedTotal}).`);
   }
   const timestamp = new Date().toISOString();
@@ -171,6 +174,9 @@ async function saveSalesData(formData, userEmail) {
       Amount: 0,
       RMD_CSTM: '',
       Delivery_Date: deliveryDate || null,
+      Due_Balance_Received: Number(dueBalanceReceived) || 0,
+      Due_Balance_Bill_Number: dueBalanceBillNumber || billNumber,
+      Balance_Due: Number(balanceDue) || 0,
       Amount_Received: totalAmountReceived,
       Paymode: paymentData.map(p => p.paymode).join(', '),
       Timestamp: timestamp,
@@ -201,6 +207,9 @@ async function saveSalesData(formData, userEmail) {
         Amount: Number(item.amount) || 0,
         RMD_CSTM: item.rmdCstm,
         Delivery_Date: deliveryDate || null,
+        Due_Balance_Received: index === 0 ? Number(dueBalanceReceived) || 0 : 0,
+        Due_Balance_Bill_Number: index === 0 ? dueBalanceBillNumber || billNumber : null,
+        Balance_Due: index === 0 ? Number(balanceDue) || 0 : 0,
         Amount_Received: index === 0 ? totalAmountReceived : 0,
         Paymode: index === 0 ? paymentData.map(p => p.paymode).join(', ') : '',
         Timestamp: timestamp,
@@ -272,7 +281,7 @@ async function updateSalesData(formData, userEmail) {
     });
   }
   const calculatedTotal = totalItems + Number(dueBalanceReceived || 0) - Number(balanceDue || 0);
-  if (totalAmountReceived !== calculatedTotal) {
+  if (Math.abs(totalAmountReceived - calculatedTotal) > 0.01) {
     throw new Error(`Amount Received (${totalAmountReceived}) does not match calculated value (${calculatedTotal}).`);
   }
   const timestamp = new Date().toISOString();
@@ -294,6 +303,9 @@ async function updateSalesData(formData, userEmail) {
       Amount: 0,
       RMD_CSTM: '',
       Delivery_Date: deliveryDate || null,
+      Due_Balance_Received: Number(dueBalanceReceived) || 0,
+      Due_Balance_Bill_Number: dueBalanceBillNumber || billNumber,
+      Balance_Due: Number(balanceDue) || 0,
       Amount_Received: totalAmountReceived,
       Paymode: paymentData.map(p => p.paymode).join(', '),
       Timestamp: timestamp,
@@ -324,6 +336,9 @@ async function updateSalesData(formData, userEmail) {
         Amount: Number(item.amount) || 0,
         RMD_CSTM: item.rmdCstm,
         Delivery_Date: deliveryDate || null,
+        Due_Balance_Received: index === 0 ? Number(dueBalanceReceived) || 0 : 0,
+        Due_Balance_Bill_Number: index === 0 ? dueBalanceBillNumber || billNumber : null,
+        Balance_Due: index === 0 ? Number(balanceDue) || 0 : 0,
         Amount_Received: index === 0 ? totalAmountReceived : 0,
         Paymode: index === 0 ? paymentData.map(p => p.paymode).join(', ') : '',
         Timestamp: timestamp,
@@ -407,7 +422,7 @@ async function getBillNumbersWithPendingBalance() {
     FROM \`${PROJECT_ID}.${DATASET_ID}.Balance_Due\`
     WHERE Balance_Due IS NOT NULL AND Due_Balance_Received IS NOT NULL
     GROUP BY Due_Balance_Bill_Number, Date
-    HAVING SUM(CAST(Balance_Due AS FLOAT64)) > SUM(CAST(Due_Balance_Received AS FLOAT64))
+    HAVING SUM(Balance_Due) > SUM(Due_Balance_Received)
   `;
   const billNumbers = await executeQuery(query);
   return billNumbers.rows ? billNumbers.rows.map(row => ({ Bill_Number: row.Bill_Number, Date: row.Date })) : [];
@@ -472,7 +487,7 @@ async function getSalesDataByBillNumberAndDate(billNumber, date) {
   `;
   const params = [
     { name: 'billNumber', parameterType: { type: 'STRING' }, parameterValue: { value: billNumber } },
-    { name: 'date', parameterType: { type: 'STRING' }, parameterValue: { value: date } }
+    { name: 'date', parameterType: { type: 'DATE' }, parameterValue: { value: date } }
   ];
   try {
     const [salesResults, paymentResults] = await Promise.all([
@@ -513,10 +528,10 @@ async function checkBillNumberDateDuplicate(billNumber, date) {
   `;
   const params = [
     { name: 'billNumber', parameterType: { type: 'STRING' }, parameterValue: { value: billNumber } },
-    { name: 'date', parameterType: { type: 'STRING' }, parameterValue: { value: date } }
+    { name: 'date', parameterType: { type: 'DATE' }, parameterValue: { value: date } }
   ];
-  const [rows] = await bigquery.query({ query, params });
-  return { isDuplicate: rows && rows[0].count > 0 };
+  const result = await executeQuery(query, params);
+  return { isDuplicate: result.rows && result.rows[0].count > 0 };
 }
 
 functions.http('sales', async (req, res) => {
@@ -539,12 +554,10 @@ functions.http('sales', async (req, res) => {
       return res.status(200).json(authResult);
     }
 
-    // Require userEmail for all other actions
     if (!userEmail) {
       return res.status(401).json({ error: 'User authentication required' });
     }
 
-    // Verify user privileges
     const privQuery = `
       SELECT p.insert
       FROM \`${PROJECT_ID}.${DATASET_ID}.users\` u

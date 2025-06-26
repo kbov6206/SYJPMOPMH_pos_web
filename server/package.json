@@ -8,9 +8,9 @@
     "@google-cloud/bigquery": "^7.1.0"
   },
   "engines": {
-    "node": "18"
+    "node": "22"
   },
   "scripts": {
-    "start": "functions-framework --target=sales"
+    "start": "functions-framework --target=sales --port=8080"
   }
 }

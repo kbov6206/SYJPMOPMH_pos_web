@@ -1,4 +1,7 @@
-const { useState, useEffect, useRef } = React;
+import React, { useState, useEffect, useRef } from 'react';
+import flatpickr from '../lib/flatpickr.min.js';
+
+window.API_URL = 'https://us-central1-myposdata.cloudfunctions.net/sales';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -823,7 +826,7 @@ function SalesForm({ userEmail, showNotification }) {
             billNumbers.map(bill => React.createElement(
               'option',
               { key: bill.Bill_Number, value: bill.Bill_Number },
-              `${bill.Bill_Number} (${bill.Date && bill.Date.value ? new Date(bill.Date.value).toISOString().split('T')[0] : 'Unknown'})`
+              `${bill.Bill_Number} (${bill.Date || 'Unknown'})`
             ))
           )
         )
@@ -921,3 +924,5 @@ function SalesForm({ userEmail, showNotification }) {
 }
 
 window.App = App;
+
+export default App;
