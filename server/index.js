@@ -64,6 +64,7 @@ functions.http('sales', async (req, res) => {
       console.error('Error inserting sale:', error);
       return res.status(500).json({ error: 'Failed to insert sale' });
     }
-  Polling...
   }
+
+  return res.status(400).json({ error: 'Invalid action' });
 });
