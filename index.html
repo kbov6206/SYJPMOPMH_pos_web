@@ -3,28 +3,368 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYJPMOPMH POS</title>
-  <link rel="stylesheet" href="tailwind.css">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="lib/flatpickr.min.css">
-  <link rel="icon" href="favicon.ico">
+  <title>PM-POS Data Entry Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.22.10/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .module { display: none; }
+    .module.active { display: block; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; z-index: 3000; }
+    .notification.info { background-color: #4CAF50; color: white; }
+    .notification.error { background-color: #ff4444; color: white; }
+    .sales-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .sales-table th, .sales-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .sales-table th { background-color: #f2f2f2; }
+    .date-row, .date-subtotal { font-weight: bold; background-color: #e6e6e6; }
+    .print-sidebar { display: none; position: fixed; right: 0; top: 0; height: 100%; width: 300px; background: white; border-left: 1px solid #ddd; padding: 10px; overflow-y: auto; }
+    .print-sidebar.open { display: block; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
-  <script src="lib/react.min.js"></script>
-  <script src="lib/react-dom.min.js"></script>
-  <script src="lib/flatpickr.min.js"></script>
-  <script>
-    window.API_URL = process.env.REACT_APP_API_URL || 'https://us-central1-myposdata.cloudfunctions.net/sales';
-  </script>
-  <script src="dist/dashboardSalesTable.js"></script>
-  <script src="dist/app.js"></script>
-  <script>
-    if (window.App) {
-      ReactDOM.render(React.createElement(window.App), document.getElementById('root'));
-    } else {
-      console.error('App component not found');
-    }
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // API base URL for Cloud Function
+    const API_URL = 'https://us-central1-myposdata.cloudfunctions.net/sales';
+
+    // Mock user email (replace with actual auth logic)
+    const userEmail = 'reachadeel@gmail.com';
+
+    const App = () => {
+      const [activeModule, setActiveModule] = useState('dashboard');
+      const [salesData, setSalesData] = useState([]);
+      const [notification, setNotification] = useState(null);
+      const [printData, setPrintData] = useState(null);
+
+      const showNotification = (message, type = 'info') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+      };
+
+      const fetchSalesData = async () => {
+        try {
+          const response = await fetch(`${API_URL}/getRecentEntries?table=SYJPMOPMHSalesData&email=${userEmail}&limit=100`);
+          const data = await response.json();
+          if (data.error) {
+            showNotification(data.error, 'error');
+            return;
+          }
+          setSalesData(data.rows || []);
+        } catch (error) {
+          showNotification('Failed to fetch sales data', 'error');
+        }
+      };
+
+      const handleSubmitSale = async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const sale = {
+          Date: formData.get('date'),
+          Bill_Number: formData.get('billNumber'),
+          Amount_Received: parseFloat(formData.get('amountReceived')),
+          Paymode: formData.get('paymode'),
+          Items: formData.get('items'),
+          Department: formData.get('department'),
+          User_Email: userEmail,
+        };
+
+        try {
+          const response = await fetch(`${API_URL}/insertSale`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sale),
+          });
+          const–
+
+System: * The message was truncated due to length. I will resume from the point of truncation, providing the complete `index.html` file and continuing with the remaining steps, ensuring fidelity to the original message and your requirements for maintaining the Electron app’s UI and functionality. I will not repeat any completed files or deviate from the original intent. *
+
+### Continuation of `index.html`
+
+<xaiArtifact artifact_id="e940540f-fb69-46ac-a582-59d577b61a9a" artifact_version_id="2e7812d8-ecfb-4a97-9d87-86bd4ef0b04b" title="index.html" contentType="text/html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PM-POS Data Entry Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.22.10/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .module { display: none; }
+    .module.active { display: block; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; z-index: 3000; }
+    .notification.info { background-color: #4CAF50; color: white; }
+    .notification.error { background-color: #ff4444; color: white; }
+    .sales-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .sales-table th, .sales-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .sales-table th { background-color: #f2f2f2; }
+    .date-row, .date-subtotal { font-weight: bold; background-color: #e6e6e6; }
+    .print-sidebar { display: none; position: fixed; right: 0; top: 0; height: 100%; width: 300px; background: white; border-left: 1px solid #ddd; padding: 10px; overflow-y: auto; }
+    .print-sidebar.open { display: block; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // API base URL for Cloud Function
+    const API_URL = 'https://us-central1-myposdata.cloudfunctions.net/sales';
+
+    // Mock user email (replace with actual auth logic)
+    const userEmail = 'reachadeel@gmail.com';
+
+    const App = () => {
+      const [activeModule, setActiveModule] = useState('dashboard');
+      const [salesData, setSalesData] = useState([]);
+      const [notification, setNotification] = useState(null);
+      const [printData, setPrintData] = useState(null);
+
+      const showNotification = (message, type = 'info') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+      };
+
+      const fetchSalesData = async () => {
+        try {
+          const response = await fetch(`${API_URL}/getRecentEntries?table=SYJPMOPMHSalesData&email=${userEmail}&limit=100`);
+          const data = await response.json();
+          if (data.error) {
+            showNotification(data.error, 'error');
+            return;
+          }
+          setSalesData(data.rows || []);
+        } catch (error) {
+          showNotification('Failed to fetch sales data', 'error');
+        }
+      };
+
+      const handleSubmitSale = async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const sale = {
+          Date: formData.get('date'),
+          Bill_Number: formData.get('billNumber'),
+          Amount_Received: parseFloat(formData.get('amountReceived')),
+          Paymode: formData.get('paymode'),
+          Items: formData.get('items'),
+          Department: formData.get('department'),
+          User_Email: userEmail,
+        };
+
+        try {
+          const response = await fetch(`${API_URL}/insertSale`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sale),
+          });
+          const result = await response.json();
+          if (result.error) {
+            showNotification(result.error, 'error');
+          } else {
+            showNotification('Sale added successfully', 'info');
+            fetchSalesData();
+            event.target.reset();
+          }
+        } catch (error) {
+          showNotification('Failed to add sale', 'error');
+        }
+      };
+
+      const handlePrintPreview = async (paymentDataId) => {
+        try {
+          const response = await fetch(`${API_URL}/getPrintData?paymentDataId=${paymentDataId}`);
+          const data = await response.json();
+          if (data.error) {
+            showNotification(data.error, 'error');
+          } else {
+            setPrintData(data);
+          }
+        } catch (error) {
+          showNotification('Failed to load print preview', 'error');
+        }
+      };
+
+      const handlePrint = () => {
+        if (printData) {
+          const printWindow = window.open('', '_blank');
+          printWindow.document.write(`
+            <html>
+              <head><title>Print Receipt</title></head>
+              <body>
+                <h1>Receipt</h1>
+                <p>Bill Number: ${printData.Bill_Number}</p>
+                <p>Date: ${printData.Date}</p>
+                <p>Amount: ${printData.Amount_Received}</p>
+                <p>Paymode: ${printData.Paymode}</p>
+                <p>Items: ${printData.Items}</p>
+                <p>Department: ${printData.Department}</p>
+                <button onclick="window.print()">Print</button>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
+      };
+
+      useEffect(() => {
+        if (activeModule === 'sales') {
+          fetchSalesData();
+        }
+        flatpickr('#date-picker', { dateFormat: 'Y-m-d' });
+      }, [activeModule]);
+
+      return (
+        <div className="container mx-auto p-4">
+          {notification && (
+            <div className={`notification ${notification.type}`}>
+              {notification.message}
+            </div>
+          )}
+          <header className="mb-4">
+            <h1 className="text-2xl font-bold">PM-POS Data Entry Dashboard</h1>
+            <nav className="mt-2">
+              <button
+                className={`px-4 py-2 mr-2 ${activeModule === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => setActiveModule('dashboard')}
+              >
+                Dashboard
+              </button>
+              <button
+                className={`px-4 py-2 ${activeModule === 'sales' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => setActiveModule('sales')}
+              >
+                Sales
+              </button>
+            </nav>
+          </header>
+
+          <div className={`module ${activeModule === 'dashboard' ? 'active' : ''}`}>
+            <h2 className="text-xl font-semibold mb-4">Dashboard</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => setActiveModule('sales')}
+              >
+                Sales Entry
+              </button>
+              {/* Add other module buttons as needed */}
+            </div>
+          </div>
+
+          <div className={`module ${activeModule === 'sales' ? 'active' : ''}`}>
+            <h2 className="text-xl font-semibold mb-4">Sales Entry</h2>
+            <form onSubmit={handleSubmitSale} className="mb-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block">Date</label>
+                  <input id="date-picker" name="date" className="border p-2 w-full" required />
+                </div>
+                <div>
+                  <label className="block">Bill Number</label>
+                  <input name="billNumber" className="border p-2 w-full" required />
+                </div>
+                <div>
+                  <label className="block">Amount Received</label>
+                  <input type="number" step="0.01" name="amountReceived" className="border p-2 w-full" required />
+                </div>
+                <div>
+                  <label className="block">Paymode</label>
+                  <select name="paymode" className="border p-2 w-full" required>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block">Items</label>
+                  <input name="items" className="border p-2 w-full" required />
+                </div>
+                <div>
+                  <label className="block">Department</label>
+                  <input name="department" className="border p-2 w-full" required />
+                </div>
+              </div>
+              <button type="submit" className="bg-blue-500 text-white px-4 py-2 mt-4 rounded">
+                Submit Sale
+              </button>
+            </form>
+
+            <h3 className="text-lg font-semibold mb-2">Recent Sales</h3>
+            <table className="sales-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Bill Number</th>
+                  <th>Amount</th>
+                  <th>Paymode</th>
+                  <th>Items</th>
+                  <th>Department</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesData.map((sale, index) => (
+                  <tr key={index}>
+                    <td>{sale.Date}</td>
+                    <td>{sale.Bill_Number}</td>
+                    <td>{sale.Amount_Received.toFixed(2)}</td>
+                    <td>{sale.Paymode}</td>
+                    <td>{sale.Items}</td>
+                    <td>{sale.Department}</td>
+                    <td>
+                      <button
+                        className="bg-blue-500 text-white px-2 py-1 rounded"
+                        onClick={() => handlePrintPreview(sale.PaymentData_ID)}
+                      >
+                        Print Preview
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {printData && (
+              <div className="print-sidebar open">
+                <h3 className="text-lg font-semibold mb-2">Print Preview</h3>
+                <p>Bill Number: {printData.Bill_Number}</p>
+                <p>Date: {printData.Date}</p>
+                <p>Amount: {printData.Amount_Received}</p>
+                <p>Paymode: {printData.Paymode}</p>
+                <p>Items: {printData.Items}</p>
+                <p>Department: {printData.Department}</p>
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 mt-4 rounded"
+                  onClick={handlePrint}
+                >
+                  Print
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 mt-2 rounded"
+                  onClick={() => setPrintData(null)}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>

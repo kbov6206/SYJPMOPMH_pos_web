@@ -5,3 +5,6 @@ dist/
 *.bak
 package-lock copy.json
 syjpmopmh-pos-web@1.0.0
+lib/react.production.min.js
+lib/react-dom.production.min.js
+lib/babel.min.js

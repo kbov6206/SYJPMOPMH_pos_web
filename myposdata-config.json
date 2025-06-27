@@ -1,0 +1,640 @@
+NAME     IS_ACTIVE  ACCOUNT               PROJECT    COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
+default  True       reachadeel@gmail.com  myposdata
+{
+  "createTime": "2025-04-10T08:53:22.601754Z",
+  "lifecycleState": "ACTIVE",
+  "name": "MyPOSData",
+  "projectId": "myposdata",
+  "projectNumber": "385936458000"
+}
+[
+  {
+    "disabled": false,
+    "displayName": "App Engine default service account",
+    "email": "myposdata@appspot.gserviceaccount.com",
+    "etag": "MDEwMjE5MjA=",
+    "name": "projects/myposdata/serviceAccounts/myposdata@appspot.gserviceaccount.com",
+    "oauth2ClientId": "101725968945041507318",
+    "projectId": "myposdata",
+    "uniqueId": "101725968945041507318"
+  },
+  {
+    "description": "Connect to Beekeeper",
+    "disabled": false,
+    "displayName": "princemajestic",
+    "email": "princemajestic@myposdata.iam.gserviceaccount.com",
+    "etag": "MDEwMjE5MjA=",
+    "name": "projects/myposdata/serviceAccounts/princemajestic@myposdata.iam.gserviceaccount.com",
+    "oauth2ClientId": "113088830029943013269",
+    "projectId": "myposdata",
+    "uniqueId": "113088830029943013269"
+  },
+  {
+    "description": "Service account for SYJPMOPMH_pos_web deployment",
+    "disabled": false,
+    "displayName": "SYJPMOPMH_pos_web",
+    "email": "syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com",
+    "etag": "MDEwMjE5MjA=",
+    "name": "projects/myposdata/serviceAccounts/syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com",
+    "oauth2ClientId": "104252783591732684648",
+    "projectId": "myposdata",
+    "uniqueId": "104252783591732684648"
+  },
+  {
+    "description": "Service account for GUI app",
+    "disabled": false,
+    "displayName": "bigquery-gui-access",
+    "email": "bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+    "etag": "MDEwMjE5MjA=",
+    "name": "projects/myposdata/serviceAccounts/bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+    "oauth2ClientId": "115582723861437129331",
+    "projectId": "myposdata",
+    "uniqueId": "115582723861437129331"
+  },
+  {
+    "disabled": false,
+    "displayName": "Default compute service account",
+    "email": "385936458000-compute@developer.gserviceaccount.com",
+    "etag": "MDEwMjE5MjA=",
+    "name": "projects/myposdata/serviceAccounts/385936458000-compute@developer.gserviceaccount.com",
+    "oauth2ClientId": "108700346820735340784",
+    "projectId": "myposdata",
+    "uniqueId": "108700346820735340784"
+  }
+]
+[
+  {
+    "cors_config": [
+      {
+        "method": [
+          "GET"
+        ],
+        "origin": [
+          "https://*.cloud.google.com",
+          "https://*.corp.google.com",
+          "https://*.corp.google.com:*",
+          "https://*.cloud.google",
+          "https://*.byoid.goog"
+        ]
+      }
+    ],
+    "creation_time": "2025-06-25T11:01:52+0000",
+    "default_storage_class": "STANDARD",
+    "generation": 1750849312754799850,
+    "labels": {
+      "goog-managed-by": "cloudfunctions"
+    },
+    "lifecycle_config": {
+      "rule": [
+        {
+          "action": {
+            "type": "Delete"
+          },
+          "condition": {
+            "isLive": false,
+            "numNewerVersions": 3
+          }
+        }
+      ]
+    },
+    "location": "US-CENTRAL1",
+    "location_type": "region",
+    "metageneration": 1,
+    "name": "gcf-v2-sources-385936458000-us-central1",
+    "public_access_prevention": "inherited",
+    "soft_delete_policy": {
+      "effectiveTime": "2025-06-25T11:01:52.919000+00:00",
+      "retentionDurationSeconds": "604800"
+    },
+    "storage_url": "gs://gcf-v2-sources-385936458000-us-central1/",
+    "uniform_bucket_level_access": true,
+    "update_time": "2025-06-25T11:01:52+0000",
+    "versioning_enabled": true
+  },
+  {
+    "cors_config": [
+      {
+        "method": [
+          "PUT"
+        ],
+        "origin": [
+          "https://*.cloud.google.com",
+          "https://*.corp.google.com",
+          "https://*.corp.google.com:*",
+          "https://*.cloud.google",
+          "https://*.byoid.goog"
+        ],
+        "responseHeader": [
+          "content-type"
+        ]
+      }
+    ],
+    "creation_time": "2025-06-25T11:01:38+0000",
+    "default_storage_class": "STANDARD",
+    "generation": 1750849298759604657,
+    "labels": {
+      "goog-managed-by": "cloudfunctions"
+    },
+    "lifecycle_config": {
+      "rule": [
+        {
+          "action": {
+            "type": "Delete"
+          },
+          "condition": {
+            "age": 1
+          }
+        }
+      ]
+    },
+    "location": "US-CENTRAL1",
+    "location_type": "region",
+    "metageneration": 1,
+    "name": "gcf-v2-uploads-385936458000.us-central1.cloudfunctions.appspot.com",
+    "public_access_prevention": "inherited",
+    "soft_delete_policy": {
+      "effectiveTime": "2025-06-25T11:01:38.953000+00:00",
+      "retentionDurationSeconds": "604800"
+    },
+    "storage_url": "gs://gcf-v2-uploads-385936458000.us-central1.cloudfunctions.appspot.com/",
+    "uniform_bucket_level_access": true,
+    "update_time": "2025-06-25T11:01:38+0000"
+  },
+  {
+    "acl": [
+      {
+        "entity": "project-owners-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "owners"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-editors-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "editors"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-viewers-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "viewers"
+        },
+        "role": "READER"
+      }
+    ],
+    "creation_time": "2025-06-02T05:28:54+0000",
+    "default_acl": [
+      {
+        "entity": "project-owners-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "owners"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-editors-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "editors"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-viewers-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "viewers"
+        },
+        "role": "READER"
+      }
+    ],
+    "default_storage_class": "STANDARD",
+    "generation": 1748842134464709350,
+    "location": "US",
+    "location_type": "multi-region",
+    "metageneration": 1,
+    "name": "pm-pos-data-backup",
+    "public_access_prevention": "enforced",
+    "rpo": "DEFAULT",
+    "soft_delete_policy": {
+      "effectiveTime": "2025-06-02T05:28:54.783000+00:00",
+      "retentionDurationSeconds": "604800"
+    },
+    "storage_url": "gs://pm-pos-data-backup/",
+    "uniform_bucket_level_access": false,
+    "update_time": "2025-06-02T05:28:54+0000"
+  },
+  {
+    "cors_config": [
+      {
+        "method": [
+          "GET"
+        ],
+        "origin": [
+          "https://*.cloud.google.com",
+          "https://*.corp.google.com",
+          "https://*.corp.google.com:*",
+          "https://*.cloud.google",
+          "https://*.byoid.goog"
+        ]
+      }
+    ],
+    "creation_time": "2025-06-02T06:11:36+0000",
+    "default_storage_class": "STANDARD",
+    "generation": 1748844696637865274,
+    "location": "US-CENTRAL1",
+    "location_type": "region",
+    "metageneration": 1,
+    "name": "run-sources-myposdata-us-central1",
+    "public_access_prevention": "inherited",
+    "soft_delete_policy": {
+      "effectiveTime": "2025-06-02T06:11:36.719000+00:00",
+      "retentionDurationSeconds": "604800"
+    },
+    "storage_url": "gs://run-sources-myposdata-us-central1/",
+    "uniform_bucket_level_access": true,
+    "update_time": "2025-06-02T06:11:36+0000"
+  },
+  {
+    "acl": [
+      {
+        "entity": "project-editors-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "editors"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-owners-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "owners"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-viewers-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "viewers"
+        },
+        "role": "READER"
+      }
+    ],
+    "creation_time": "2025-06-25T11:02:39+0000",
+    "default_acl": [
+      {
+        "entity": "project-owners-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "owners"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-editors-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "editors"
+        },
+        "role": "OWNER"
+      },
+      {
+        "entity": "project-viewers-385936458000",
+        "projectTeam": {
+          "projectNumber": "385936458000",
+          "team": "viewers"
+        },
+        "role": "READER"
+      }
+    ],
+    "default_storage_class": "STANDARD",
+    "generation": 1750849359437772415,
+    "location": "US-CENTRAL1",
+    "location_type": "region",
+    "metageneration": 14,
+    "name": "syjpmopmh-pos-web",
+    "public_access_prevention": "inherited",
+    "soft_delete_policy": {
+      "effectiveTime": "2025-06-25T11:02:39.524000+00:00",
+      "retentionDurationSeconds": "604800"
+    },
+    "storage_url": "gs://syjpmopmh-pos-web/",
+    "uniform_bucket_level_access": false,
+    "update_time": "2025-06-25T15:05:00+0000",
+    "website_config": {
+      "mainPageSuffix": "index.html",
+      "notFoundPage": "index.html"
+    }
+  }
+]
+[
+  {
+    "buildConfig": {
+      "automaticUpdatePolicy": {},
+      "build": "projects/385936458000/locations/us-central1/builds/2021e838-ea5d-4f2e-a341-3134e5b53920",
+      "dockerRegistry": "ARTIFACT_REGISTRY",
+      "dockerRepository": "projects/myposdata/locations/us-central1/repositories/gcf-artifacts",
+      "entryPoint": "sales",
+      "runtime": "nodejs22",
+      "serviceAccount": "projects/myposdata/serviceAccounts/385936458000-compute@developer.gserviceaccount.com",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-385936458000-us-central1",
+          "generation": "1750955000991135",
+          "object": "sales/function-source.zip"
+        }
+      },
+      "sourceProvenance": {
+        "resolvedStorageSource": {
+          "bucket": "gcf-v2-sources-385936458000-us-central1",
+          "generation": "1750955000991135",
+          "object": "sales/function-source.zip"
+        }
+      }
+    },
+    "createTime": "2025-06-25T11:13:45.457810575Z",
+    "environment": "GEN_2",
+    "labels": {
+      "deployment-tool": "cli-gcloud"
+    },
+    "name": "projects/myposdata/locations/us-central1/functions/sales",
+    "satisfiesPzi": true,
+    "serviceConfig": {
+      "allTrafficOnLatestRevision": true,
+      "availableCpu": "0.1666",
+      "availableMemory": "256Mi",
+      "environmentVariables": {
+        "LOG_EXECUTION_ID": "true"
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "maxInstanceCount": 100,
+      "maxInstanceRequestConcurrency": 1,
+      "revision": "sales-00008-boy",
+      "service": "projects/myposdata/locations/us-central1/services/sales",
+      "serviceAccountEmail": "syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com",
+      "timeoutSeconds": 60,
+      "uri": "https://sales-qkhrc25z6q-uc.a.run.app"
+    },
+    "state": "ACTIVE",
+    "updateTime": "2025-06-26T16:24:13.533858602Z",
+    "url": "https://us-central1-myposdata.cloudfunctions.net/sales"
+  }
+]
+{
+  "bindings": [
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "projects/myposdata/roles/custom.storage.bucketAccess"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-artifactregistry.iam.gserviceaccount.com"
+      ],
+      "role": "roles/artifactregistry.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:princemajestic@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com",
+        "user:reachadeel@gmail.com"
+      ],
+      "role": "roles/bigquery.admin"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:princemajestic@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:service-385936458000@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com",
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com",
+        "user:reachadeel@gmail.com"
+      ],
+      "role": "roles/bigquery.dataEditor"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:princemajestic@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:service-385936458000@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com",
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/bigquery.jobUser"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com"
+      ],
+      "role": "roles/bigquerydatatransfer.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:385936458000@cloudbuild.gserviceaccount.com",
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/cloudbuild.builds.builder"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-cloudbuild.iam.gserviceaccount.com"
+      ],
+      "role": "roles/cloudbuild.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/cloudfunctions.invoker"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcf-admin-robot.iam.gserviceaccount.com"
+      ],
+      "role": "roles/cloudfunctions.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
+      ],
+      "role": "roles/cloudscheduler.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@containerregistry.iam.gserviceaccount.com"
+      ],
+      "role": "roles/containerregistry.ServiceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:385936458000-compute@developer.gserviceaccount.com",
+        "serviceAccount:385936458000@cloudservices.gserviceaccount.com",
+        "serviceAccount:myposdata@appspot.gserviceaccount.com"
+      ],
+      "role": "roles/editor"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-eventarc.iam.gserviceaccount.com"
+      ],
+      "role": "roles/eventarc.serviceAgent"
+    },
+    {
+      "members": [
+        "user:reachadeel@gmail.com"
+      ],
+      "role": "roles/iam.serviceAccountAdmin"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-pubsub.iam.gserviceaccount.com"
+      ],
+      "role": "roles/iam.serviceAccountTokenCreator"
+    },
+    {
+      "members": [
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/iam.serviceAccountUser"
+    },
+    {
+      "members": [
+        "user:reachadeel@gmail.com"
+      ],
+      "role": "roles/iam.workloadIdentityPoolAdmin"
+    },
+    {
+      "members": [
+        "user:reachadeel@gmail.com"
+      ],
+      "role": "roles/owner"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@gcp-sa-pubsub.iam.gserviceaccount.com"
+      ],
+      "role": "roles/pubsub.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/run.invoker"
+    },
+    {
+      "members": [
+        "serviceAccount:service-385936458000@serverless-robot-prod.iam.gserviceaccount.com"
+      ],
+      "role": "roles/run.serviceAgent"
+    },
+    {
+      "members": [
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/secretmanager.secretAccessor"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com",
+        "serviceAccount:syjpmopmh-pos-web@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/storage.admin"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/storage.objectAdmin"
+    },
+    {
+      "members": [
+        "serviceAccount:bigquery-gui-access@myposdata.iam.gserviceaccount.com"
+      ],
+      "role": "roles/storage.objectViewer"
+    }
+  ],
+  "etag": "BwY4ZBGtzHc=",
+  "version": 1
+}
+[
+  {
+    "name": "SaleData_ID",
+    "type": "STRING"
+  },
+  {
+    "name": "Date",
+    "type": "DATE"
+  },
+  {
+    "name": "Bill_Number",
+    "type": "STRING"
+  },
+  {
+    "name": "Salesman",
+    "type": "STRING"
+  },
+  {
+    "name": "Shop_Name",
+    "type": "STRING"
+  },
+  {
+    "name": "Department",
+    "type": "STRING"
+  },
+  {
+    "name": "Mobile_Number",
+    "type": "STRING"
+  },
+  {
+    "name": "Item",
+    "type": "STRING"
+  },
+  {
+    "name": "Amount",
+    "type": "NUMERIC"
+  },
+  {
+    "name": "RMD_CSTM",
+    "type": "STRING"
+  },
+  {
+    "name": "Due_Balance_Received",
+    "type": "NUMERIC"
+  },
+  {
+    "name": "Due_Balance_Bill_Number",
+    "type": "STRING"
+  },
+  {
+    "name": "Balance_Due",
+    "type": "NUMERIC"
+  },
+  {
+    "name": "Delivery_Date",
+    "type": "DATE"
+  },
+  {
+    "name": "Amount_Received",
+    "type": "NUMERIC"
+  },
+  {
+    "name": "Paymode",
+    "type": "STRING"
+  },
+  {
+    "name": "Timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "name": "Email_ID",
+    "type": "STRING"
+  }
+]
