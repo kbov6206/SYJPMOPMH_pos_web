@@ -1,22 +1,21 @@
 {
   "name": "syjpmopmh-pos-web",
   "version": "1.0.0",
-  "description": "SYJPMOPMH POS Web Application",
+  "description": "Web-based POS data entry dashboard",
+  "main": "index.js",
   "scripts": {
-    "build": "babel src/app.jsx -o dist/app.js && babel lib/dashboardSalesTable.js -o dist/dashboardSalesTable.js && npm run copy-libs",
-    "copy-libs": "mkdir -p lib && cp node_modules/react/umd/react.production.min.js lib/react.min.js && cp node_modules/react-dom/umd/react-dom.production.min.js lib/react-dom.min.js",
-    "start": "npx serve -s ."
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.27.2",
-    "@babel/core": "^7.27.4",
-    "@babel/preset-env": "^7.27.2",
-    "@babel/preset-react": "^7.27.1"
+    "build": "mkdir -p dist && cp -r *.html *.css lib dist && npm run build:js",
+    "build:js": "browserify src/app.js -o dist/app.js",
+    "start": "serve dist"
   },
   "dependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "dotenv": "^16.4.5",
-    "flatpickr": "^4.6.13"
+    "flatpickr": "^4.6.13",
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "serve": "^14.2.3"
   }
 }
